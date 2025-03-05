@@ -1,36 +1,9 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Gép: 127.0.0.1
--- Létrehozás ideje: 2025. Már 04. 14:58
--- Kiszolgáló verziója: 10.4.32-MariaDB
--- PHP verzió: 8.2.12
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Adatbázis: `torpedo`
---
 CREATE DATABASE IF NOT EXISTS `torpedo` DEFAULT CHARACTER SET utf8 COLLATE utf8_hungarian_ci;
 USE `torpedo`;
-
--- --------------------------------------------------------
-
---
--- Tábla szerkezet ehhez a táblához `users`
---
--- Létrehozva: 2025. Már 04. 12:59
--- Utolsó frissítés: 2025. Már 04. 13:52
---
 
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -44,20 +17,97 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
 
---
--- TÁBLA KAPCSOLATAI `users`:
---
+CREATE TABLE IF NOT EXISTS `matches` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `match_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `player1_id` int(11) NOT NULL,
+  `player2_id` int(11) NOT NULL,
+  `winner_id` int(11) DEFAULT NULL,
+  `player1_hits` int(11) NOT NULL DEFAULT 0,
+  `player2_hits` int(11) NOT NULL DEFAULT 0,
+  `duration` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`player1_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`player2_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`winner_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
 
---
--- A tábla adatainak kiíratása `users`
---
+CREATE TABLE IF NOT EXISTS `statistics` (
+  `user_id` int(11) NOT NULL,
+  `total_matches` int(11) NOT NULL DEFAULT 0,
+  `wins` int(11) NOT NULL DEFAULT 0,
+  `losses` int(11) NOT NULL DEFAULT 0,
+  `total_hits` int(11) NOT NULL DEFAULT 0,
+  `total_misses` int(11) NOT NULL DEFAULT 0,
+  `average_hits` float NOT NULL DEFAULT 0,
+  `ships_sunk` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
 
-INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `created_at`, `updated_at`, `is_active`, `role`) VALUES
-(1, 'smnbzs', 'simibalazs0327@gmail.com', '$2y$10$kG2erWVrmTpfHAFaa6/COO.9XIqcR3tutMqoGnvhACe3xz.gbepDS', '2025-03-04 14:52:49', '2025-03-04 14:52:59', 1, 'user');
+CREATE TABLE IF NOT EXISTS `ship_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `size` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
+
+INSERT INTO `ship_types` (`name`, `size`) VALUES
+('carrier', 5),
+('battleship', 4),
+('cruiser', 3),
+('submarine', 3),
+('destroyer', 2);
+
+CREATE TABLE IF NOT EXISTS `ships` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `match_id` int(11) NOT NULL,
+  `ship_type_id` int(11) NOT NULL,
+  `start_x` int(11) NOT NULL,
+  `start_y` int(11) NOT NULL,
+  `orientation` enum('horizontal','vertical') NOT NULL,
+  `is_sunk` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`match_id`) REFERENCES `matches`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`ship_type_id`) REFERENCES `ship_types`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
+
+CREATE TABLE IF NOT EXISTS `shots` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `match_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `target_user_id` int(11) NOT NULL,
+  `x` int(11) NOT NULL,
+  `y` int(11) NOT NULL,
+  `is_hit` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`match_id`) REFERENCES `matches`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`target_user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
+
+CREATE TABLE IF NOT EXISTS `game_states` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `match_id` int(11) NOT NULL,
+  `player1_id` int(11) NOT NULL,
+  `player2_id` int(11) NOT NULL,
+  `current_turn` int(11) NOT NULL,
+  `player1_ships` text NOT NULL,
+  `player2_ships` text NOT NULL,
+  `player1_shots` text NOT NULL,
+  `player2_shots` text NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`match_id`) REFERENCES `matches`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`player1_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`player2_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
+
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
