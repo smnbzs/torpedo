@@ -6,7 +6,7 @@
     <title></title>
 </head>
 <body>
-    
+     
 </body>
 <script>
     const ws = new WebSocket('ws://localhost:16108');
@@ -15,7 +15,7 @@ ws.onopen = () => {
     console.log('Connected to WebSocket server');
     ws.send('Hello, server!');
 };
-
+ 
 ws.onmessage = (message) => {
     console.log('Received from server:', message.data);
 };
