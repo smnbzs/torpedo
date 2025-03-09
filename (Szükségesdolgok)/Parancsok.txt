@@ -1,0 +1,13 @@
+Elindítsd a WebSocket szervert:
+
+PortableGit mappában nyisd meg a git-cmd.exe appot, utána ezeket írd be egymás után.
+
+(1.) cd..
+(2.) cd..
+(3.) cd Websocket
+(4.) cd src
+(5.) php WsServer.php
+
+Ha ezeket látod a konzolon, akkor sikeres fut, mással már nem kell foglalkoznod.: 
+Starting BiddingService...
+Websocket server starting on port 16108...
