@@ -1,0 +1,19 @@
+{
+    "name": "sim/websocket",
+    "description": "Torpedo",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Sim\\Websocket\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "smnbzs",
+            "email": "simibalazs0327@gmail.com"
+        }
+    ],
+    "require": {
+        "cboden/ratchet": "^0.4.4"
+    }
+}
