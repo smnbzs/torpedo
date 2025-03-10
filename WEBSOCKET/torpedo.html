@@ -1,27 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>Torpedó Játék</title>
+    <style>
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(10, 40px);
+            grid-template-rows: repeat(10, 40px);
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            border: 1px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .cell.ship {
+            background-color: green;
+        }
+        .cell.hit {
+            background-color: red;
+        }
+        .cell.miss {
+            background-color: blue;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+    </style>
 </head>
 <body>
-     
+    <h1>Torpedó Játék</h1>
+    <div class="container">
+        <div>
+            <h2>Hajók elhelyezése</h2>
+            <div class="game-board" id="placementBoard"></div>
+        </div>
+        <div>
+            <h2>Lövés eredménye</h2>
+            <div class="game-board" id="shootingBoard"></div>
+        </div>
+    </div>
+    <div ><span id="status">Helyezd el a 10 hajót!</span></div>
+    <button id="doneButton" disabled>Kész</button>
+    <script src="script.js"></script>
+    
 </body>
-<script>
-    const ws = new WebSocket('ws://localhost:16108');
-
-ws.onopen = () => {
-    console.log('Connected to WebSocket server');
-    ws.send('Hello, server!');
-};
- 
-ws.onmessage = (message) => {
-    console.log('Received from server:', message.data);
-};
-
-ws.onclose = () => {
-    console.log('Disconnected from WebSocket server');
-};
-</script>
 </html>
