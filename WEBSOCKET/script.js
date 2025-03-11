@@ -6,6 +6,29 @@ const doneButton = document.getElementById('doneButton');
 
 let ships = [];
 let shipsPlaced = 0;
+let userId = null;
+
+fetch('get_user_id.php')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Hiba történt a kérés feldolgozásakor: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.user_id) {
+            userId = data.user_id;
+            socket.send(JSON.stringify({
+                type: 'login',
+                userId: userId
+            }));
+        } else {
+            console.error('Nincs bejelentkezett felhasználó!');
+        }
+    })
+    .catch(error => {
+        console.error('Hiba a felhasználó id-jének megszerzésében:', error);
+    });
 
 
 for (let y = 0; y < 10; y++) {
@@ -19,7 +42,6 @@ for (let y = 0; y < 10; y++) {
     }
 }
 
-
 for (let y = 0; y < 10; y++) {
     for (let x = 0; x < 10; x++) {
         const cell = document.createElement('div');
@@ -31,14 +53,12 @@ for (let y = 0; y < 10; y++) {
     }
 }
 
-
 function handleCellClick(event) {
     if (shipsPlaced >= 10) return; 
 
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
 
-    
     if (!ships.some(ship => ship.x === x && ship.y === y)) {
         ships.push({ x, y });
         event.target.classList.add('ship');
@@ -51,22 +71,22 @@ function handleCellClick(event) {
     }
 }
 
-
 function handleShootClick(event) {
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
 
-   
-    socket.send(JSON.stringify({ type: 'shoot', x: x, y: y }));
+    if (userId) {
+        socket.send(JSON.stringify({ type: 'shoot', x: x, y: y, userId: userId }));
+    }
 }
 
-
 doneButton.addEventListener('click', function() {
-    socket.send(JSON.stringify({ type: 'placeShip', ships: ships }));
+    if (userId) {
+        socket.send(JSON.stringify({ type: 'placeShip', ships: ships, userId: userId }));
+    }
     doneButton.disabled = true;
     statusDiv.textContent = "Várakozás a második játékosra...";
 });
-
 
 socket.onopen = function(event) {
     console.log("WebSocket kapcsolat létrejött!");
@@ -97,7 +117,6 @@ socket.onmessage = function(event) {
     }
 };
 
-
 function handleShotResult(message) {
     const cell = document.querySelector(`#shootingBoard .cell[data-x='${message.x}'][data-y='${message.y}']`);
     if (message.hit) {
@@ -107,11 +126,8 @@ function handleShotResult(message) {
     }
 }
 
-
 function handleGameEnd(message) {
     statusDiv.innerHTML = "<h2>Meccs véget ért</h2>";
-
-    
     const cells = document.querySelectorAll('#shootingBoard .cell');
     cells.forEach(cell => {
         cell.removeEventListener('click', handleShootClick);

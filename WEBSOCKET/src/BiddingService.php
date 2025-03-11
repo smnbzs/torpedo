@@ -1,4 +1,5 @@
-<?php
+<?php 
+
 namespace Sim\Websocket;
 
 use Ratchet\MessageComponentInterface;
@@ -10,7 +11,8 @@ class BiddingService implements MessageComponentInterface {
     protected $clients;
     protected $players = [];
     protected $pdo;
-    
+    protected $matchId;
+
     public function __construct() {
         $this->clients = new \SplObjectStorage;
 
@@ -25,12 +27,12 @@ class BiddingService implements MessageComponentInterface {
 
     public function onOpen(ConnectionInterface $conn) {
         $this->clients->attach($conn);
-        echo "New connection: {$conn->resourceId}\n";
+        echo "New connection established.\n";
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
         $data = json_decode($msg, true);
-        
+
         switch ($data['type']) {
             case 'login':
                 $this->handleLogin($from, $data['user_id']);
@@ -45,8 +47,8 @@ class BiddingService implements MessageComponentInterface {
     }
 
     private function handleLogin($from, $userId) {
-        // Ellenőrizzük, hogy a user_id létezik-e az adatbázisban
-        $stmt = $this->pdo->prepare("SELECT id FROM users WHERE id = ?");
+        // Ellenőrizzük, hogy a felhasználó létezik-e a rendszerben
+        $stmt = $this->pdo->prepare("SELECT id, username FROM users WHERE id = ?");
         $stmt->execute([$userId]);
         $user = $stmt->fetch();
 
@@ -55,29 +57,55 @@ class BiddingService implements MessageComponentInterface {
             return;
         }
 
-        // Hozzáadjuk a játékosok listájához
+        // Hozzáadjuk a felhasználót a bejelentkezett játékosok listájához
         $this->players[$userId] = [
             'conn' => $from,
+            'username' => $user['username'],
             'ships' => [],
             'opponent' => null
         ];
 
-        echo "User {$userId} logged in.\n";
+        echo "User {$user['username']} (ID: {$userId}) logged in.\n";
 
-        $from->send(json_encode(["type" => "loginSuccess", "user_id" => $userId]));
-
-        // Játék párosítás
+        // Kezdjünk új játékot, ha két játékos bejelentkezett
         if (count($this->players) == 2) {
             $playerIds = array_keys($this->players);
+
+            // Új mérkőzés indítása, amikor két játékos bejelentkezett
+            $stmt = $this->pdo->prepare("INSERT INTO matches (player1_id, player2_id, created_at) VALUES (?, ?, NOW())");
+            $stmt->execute([$playerIds[0], $playerIds[1]]);
+            $this->matchId = $this->pdo->lastInsertId();
+
+            // Kijelöljük az ellenfeleket a játékosok számára
             $this->players[$playerIds[0]]['opponent'] = $playerIds[1];
             $this->players[$playerIds[1]]['opponent'] = $playerIds[0];
 
-            echo "Game started between {$playerIds[0]} and {$playerIds[1]}\n";
+            echo "Game started between {$this->players[$playerIds[0]]['username']} and {$this->players[$playerIds[1]]['username']} (Match ID: {$this->matchId})\n";
 
+            // Üzenet küldése mindkét játékosnak a meccs indításáról
             foreach ($this->players as $id => $player) {
-                $player['conn']->send(json_encode(["type" => "gameStart"]));
+                $player['conn']->send(json_encode([
+                    "type" => "gameStart", 
+                    "match_id" => $this->matchId,
+                    "username" => $player['username'],
+                    "user_id" => $id
+                ]));
             }
+        } else {
+            // Ha nem két játékos van még bejelentkezve, várakozás üzenet küldése
+            $from->send(json_encode([
+                "type" => "waitingForOpponent", 
+                "message" => "Waiting for an opponent to join..."
+            ]));
         }
+
+        // Üzenet küldése a bejelentkezett felhasználónak, hogy sikeres volt a login
+        $from->send(json_encode([
+            "type" => "loginSuccess", 
+            "user_id" => $userId, 
+            "match_id" => $this->matchId,
+            "username" => $user['username']
+        ]));
     }
 
     private function handlePlaceShip($from, $ships) {
@@ -91,10 +119,15 @@ class BiddingService implements MessageComponentInterface {
 
         $stmt = $this->pdo->prepare("INSERT INTO ships (user_id, match_id, ship_type_id, start_x, start_y, orientation) VALUES (?, ?, ?, ?, ?, ?)");
         foreach ($ships as $ship) {
-            $stmt->execute([$userId, 1, 1, $ship['x'], $ship['y'], 'horizontal']);
+            $stmt->execute([$userId, $this->matchId, 1, $ship['x'], $ship['y'], 'horizontal']);
         }
 
-        $from->send(json_encode(["type" => "shipsPlaced"]));
+        $from->send(json_encode([
+            "type" => "shipsPlaced", 
+            "match_id" => $this->matchId, 
+            "username" => $this->players[$userId]['username'],
+            "user_id" => $userId
+        ]));
     }
 
     private function handleShoot($from, $x, $y) {
@@ -119,10 +152,26 @@ class BiddingService implements MessageComponentInterface {
         }
 
         $stmt = $this->pdo->prepare("INSERT INTO shots (match_id, user_id, target_user_id, x, y, is_hit) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([1, $userId, $opponentId, $x, $y, $hit ? 1 : 0]);
+        $stmt->execute([$this->matchId, $userId, $opponentId, $x, $y, $hit ? 1 : 0]);
 
-        $from->send(json_encode(["type" => "shotResult", "x" => $x, "y" => $y, "hit" => $hit]));
-        $this->players[$opponentId]['conn']->send(json_encode(["type" => "opponentShot", "x" => $x, "y" => $y, "hit" => $hit]));
+        $from->send(json_encode([
+            "type" => "shotResult", 
+            "x" => $x, 
+            "y" => $y, 
+            "hit" => $hit, 
+            "match_id" => $this->matchId,
+            "username" => $this->players[$userId]['username'],
+            "user_id" => $userId
+        ]));
+        $this->players[$opponentId]['conn']->send(json_encode([
+            "type" => "opponentShot", 
+            "x" => $x, 
+            "y" => $y, 
+            "hit" => $hit, 
+            "match_id" => $this->matchId,
+            "username" => $this->players[$opponentId]['username'],
+            "user_id" => $opponentId
+        ]));
     }
 
     public function onClose(ConnectionInterface $conn) {
@@ -132,7 +181,7 @@ class BiddingService implements MessageComponentInterface {
         }
 
         $this->clients->detach($conn);
-        echo "Connection closed: {$conn->resourceId}\n";
+        echo "Connection closed for user ID: {$userId}\n";
     }
 
     public function onError(ConnectionInterface $conn, Exception $e) {

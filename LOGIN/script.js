@@ -2,7 +2,7 @@ function userlogin()
 {
     var email = document.getElementById("email");
     var password = document.getElementById("password");
-    fetch("http:localhost/torpedo/api/login",
+    fetch("http://localhost/torpedo/api/login",
         {
             method: "POST", 
             headers: {"Content-Type": "application/json"},
