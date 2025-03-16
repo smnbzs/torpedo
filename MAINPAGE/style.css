@@ -1,0 +1,14 @@
+/* Custom styles for the user dropdown image */
+.userdropdown {
+    width: 70px; /* Fixed width */
+    height: 70px; /* Fixed height */
+}
+
+/* Hide the dropdown arrow */
+.nav-item.dropdown .nav-link::after {
+    display: none;
+}
+.dropdown-menu.show
+{
+    text-align: center;
+}
