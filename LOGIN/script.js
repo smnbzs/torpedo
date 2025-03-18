@@ -30,7 +30,7 @@ submit.addEventListener("click", function(event) {
             document.cookie = `userUID=${firebaseUID}; path=/; max-age=3600`;  
             document.cookie = `userEmail=${email}; path=/; max-age=3600`;  
 
-            alert("Sikeres bejelentkezés a Firebase-be!");
+            alert("You have successfully logged in.");
 
             fetch("http://localhost/torpedo/api/login", {
                 method: "POST",
@@ -59,6 +59,6 @@ submit.addEventListener("click", function(event) {
         .catch((error) => {
             const errorCode = error.code;
             const errorMessage = error.message;
-            alert("Hiba történt a Firebase bejelentkezés során: " + errorMessage);
+            alert("There was an issue encountered while logging in.: " + errorMessage);
         });
 });

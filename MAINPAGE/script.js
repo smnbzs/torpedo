@@ -23,7 +23,7 @@ function logoutUser() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === "success") {
+            if (data.status == "success") {
                 deleteCookie("userUID");
                 deleteCookie("userEmail");
                 deleteCookie("loginTime");
@@ -85,7 +85,7 @@ function username() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === "success") {
+        if (data.status == "success") {
             document.getElementById("username").innerText = data.username;
         } else {
             console.error("Error:", data.message);

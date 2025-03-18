@@ -27,21 +27,21 @@ submit.addEventListener("click", function(event) {
     var emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
     if (!passwordRegex.test(password)) {
-        alert("A jelszónak legalább 8 karakterből kell állnia, és tartalmaznia kell számot, kis- és nagybetűt.");
+        alert("The password must consist of a minimum of 8 characters, including numbers, lowercase, and uppercase letters.");
         return;
     }
 
     if (!emailRegex.test(email)) {
-        alert("A megadott e-mail cím érvénytelen!");
+        alert("The email address provided is invalid!");
         return;
     }
 
-    if (password === confirmpassword) {
+    if (password == confirmpassword) {
         const auth = getAuth();
         createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             const user = userCredential.user;
-            alert("Felhasználó regisztrálva a Firebase-ben!");
+            alert("The user has been successfully registered.");
 
             fetch("http://localhost/torpedo/api/register.php", {
                 method: "POST",
@@ -73,6 +73,6 @@ submit.addEventListener("click", function(event) {
     } else {
         password = "";
         confirmpassword = "";
-        alert("A jelszó és a megerősített jelszó nem egyezik!");
+        alert("The password and its confirmation do not match.");
     }
 });

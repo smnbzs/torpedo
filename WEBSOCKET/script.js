@@ -4,36 +4,31 @@ const statusDiv = document.getElementById('status');
 const doneButton = document.getElementById('doneButton');
 const socket = new WebSocket('ws://localhost:16108');
 
-// Cookie lekérése név alapján
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
+    if (parts.length == 2) return parts.pop().split(';').shift();
     return null;
 }
 
-// Firebase UID lekérése a cookie-ból
 const userUID = getCookie("userUID");
 
-// Ha nincs UID, kijelentkeztetjük a felhasználót
 if (!userUID) {
     alert("Hiba: Nem található userUID. Kérjük, jelentkezz be újra!");
-    window.location.href = "../LOGIN/login.html"; // Átirányítás a bejelentkezési oldalra
+    window.location.href = "../LOGIN/login.html";
 }
 
 let ships = [];
 let shipsPlaced = 0;
 
-// WebSocket kapcsolat nyitásakor küldjük az UID-t
 socket.onopen = function(event) {
     console.log("WebSocket kapcsolat létrejött!");
     socket.send(JSON.stringify({
         type: "sendUID",
-        uid: userUID, // Küldjük a Firebase UID-t
+        uid: userUID, 
     }));
 };
 
-// Hajók elhelyezése
 for (let y = 0; y < 10; y++) {
     for (let x = 0; x < 10; x++) {
         const cell = document.createElement('div');
@@ -45,7 +40,6 @@ for (let y = 0; y < 10; y++) {
     }
 }
 
-// Lövéshez tábla
 for (let y = 0; y < 10; y++) {
     for (let x = 0; x < 10; x++) {
         const cell = document.createElement('div');
@@ -57,50 +51,46 @@ for (let y = 0; y < 10; y++) {
     }
 }
 
-// Hajó elhelyezése
 function handleCellClick(event) {
     if (shipsPlaced >= 10) return;
 
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
 
-    if (!ships.some(ship => ship.x === x && ship.y === y)) {
+    if (!ships.some(ship => ship.x == x && ship.y == y)) {
         ships.push({ x, y });
         event.target.classList.add('ship');
         shipsPlaced++;
 
-        if (shipsPlaced === 10) {
+        if (shipsPlaced == 10) {
             doneButton.disabled = false;
             statusDiv.textContent = "Minden hajó elhelyezve. Kattints a 'Kész' gombra!";
         }
     }
 }
 
-// Lövés küldése
 function handleShootClick(event) {
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
 
     socket.send(JSON.stringify({
         type: 'shoot',
-        uid: userUID, // Küldjük a Firebase UID-t
+        uid: userUID, 
         x: x,
         y: y,
     }));
 }
 
-// Hajók elküldése a szervernek
 doneButton.addEventListener('click', function() {
     socket.send(JSON.stringify({
         type: 'placeShip',
-        uid: userUID, // Küldjük a Firebase UID-t
+        uid: userUID, 
         ships: ships,
     }));
     doneButton.disabled = true;
     statusDiv.textContent = "Várakozás a második játékosra...";
 });
 
-// WebSocket üzenetek kezelése
 socket.onmessage = function(event) {
     const message = JSON.parse(event.data);
 
@@ -123,14 +113,13 @@ socket.onmessage = function(event) {
         case 'end':
             handleGameEnd(message);
             break;
-        case 'gameOver': // Új üzenet típus kezelése
+        case 'gameOver': 
             alert(message.message);
-            window.location.href = "../mainpage/mainpage.html"; // Átirányítás a főoldalra
+            window.location.href = "../mainpage/mainpage.html"; 
             break;
     }
 };
 
-// Lövés eredményének kezelése
 function handleShotResult(message) {
     const cell = document.querySelector(`#shootingBoard .cell[data-x='${message.x}'][data-y='${message.y}']`);
     if (message.hit) {
@@ -140,24 +129,20 @@ function handleShotResult(message) {
     }
 }
 
-// Játék vége
 function handleGameEnd(message) {
     statusDiv.innerHTML = "<h2>Meccs véget ért</h2>";
 
-    // Lövés gombok deaktiválása
     const cells = document.querySelectorAll('#shootingBoard .cell');
     cells.forEach(cell => {
         cell.removeEventListener('click', handleShootClick);
     });
 
-    // Átirányítás a bejelentkezési oldalra
     setTimeout(() => {
         alert(message.message);
         window.location.href = "../LOGIN/login.html";
     }, 1500);
 }
 
-// Kijelentkezés kezelése
 function logoutUser() {
     fetch("http://localhost/torpedo/api/logout.php", {
         method: "POST",
@@ -170,13 +155,11 @@ function logoutUser() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === "success") {
-            // Cookie-k törlése
+        if (data.status == "success") {
             document.cookie = "userUID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             document.cookie = "userEmail=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             document.cookie = "loginTime=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
-            // Átirányítás a bejelentkezési oldalra
             alert("Sikeres kijelentkezés!");
             window.location.href = "../LOGIN/login.html";
         } else {
@@ -188,7 +171,6 @@ function logoutUser() {
     });
 }
 
-// Ha nincs UID, kijelentkeztetjük a felhasználót
 if (!userUID) {
     logoutUser();
 }
