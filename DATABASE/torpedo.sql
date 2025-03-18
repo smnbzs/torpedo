@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1
--- Létrehozás ideje: 2025. Már 16. 17:01
+-- Létrehozás ideje: 2025. Már 18. 10:21
 -- Kiszolgáló verziója: 10.4.32-MariaDB
 -- PHP verzió: 8.2.12
 
@@ -22,30 +22,6 @@ SET time_zone = "+00:00";
 --
 CREATE DATABASE IF NOT EXISTS `torpedo` DEFAULT CHARACTER SET utf8 COLLATE utf8_hungarian_ci;
 USE `torpedo`;
-
--- --------------------------------------------------------
-
---
--- Tábla szerkezet ehhez a táblához `game_states`
---
-
-DROP TABLE IF EXISTS `game_states`;
-CREATE TABLE IF NOT EXISTS `game_states` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `match_id` int(11) NOT NULL,
-  `player1_id` int(11) NOT NULL,
-  `player2_id` int(11) NOT NULL,
-  `current_turn` int(11) NOT NULL,
-  `player1_ships` text NOT NULL,
-  `player2_ships` text NOT NULL,
-  `player1_shots` text NOT NULL,
-  `player2_shots` text NOT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `match_id` (`match_id`),
-  KEY `player1_id` (`player1_id`),
-  KEY `player2_id` (`player2_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
 
 -- --------------------------------------------------------
 
@@ -121,28 +97,6 @@ INSERT INTO `ship_types` (`id`, `name`, `size`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tábla szerkezet ehhez a táblához `shots`
---
-
-DROP TABLE IF EXISTS `shots`;
-CREATE TABLE IF NOT EXISTS `shots` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `match_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `target_user_id` int(11) NOT NULL,
-  `x` int(11) NOT NULL,
-  `y` int(11) NOT NULL,
-  `is_hit` tinyint(1) NOT NULL DEFAULT 0,
-  `created_at` datetime DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `match_id` (`match_id`),
-  KEY `user_id` (`user_id`),
-  KEY `target_user_id` (`target_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_hungarian_ci;
-
--- --------------------------------------------------------
-
---
 -- Tábla szerkezet ehhez a táblához `statistics`
 --
 
@@ -185,21 +139,13 @@ CREATE TABLE IF NOT EXISTS `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `firebase_uid`, `created_at`, `updated_at`, `is_active`) VALUES
-(4, 'smnbzs', 'simibalazs0327@gmail.com', '$2y$10$Akoj1/Uj57y5JwhhvcnGbOI.k0c6ZrNg42qqksyRGNx9fm94TMwqm', 'lrNvy7Wq4hfj8LPUWSIdgQ4O3OZ2', '2025-03-16 14:49:38', '2025-03-16 14:49:38', 1),
-(5, 'smnbzs2', 'simibalazs03272@gmail.com', '$2y$10$uohRIx9b4TQn096M9fnuS.3Sk.ASMgCkUN24jNkJHhOZYR.O9cLFy', 'BenmLFYdIoW9DX33l0wxcksSfe42', '2025-03-16 15:45:52', '2025-03-16 15:45:52', 1),
-(6, 'Simike', 'simike@gmail.com', '$2y$10$KphCczd/cFJR4n6ToU.A9O1Tqs1mDW6JgkdjeQdhdu6myHXmKwppe', 'VggMwuYsYpgWOBdBqaUkxnaResk2', '2025-03-16 16:59:53', '2025-03-16 16:59:53', 1);
+(4, 'smnbzs', 'simibalazs0327@gmail.com', '$2y$10$Akoj1/Uj57y5JwhhvcnGbOI.k0c6ZrNg42qqksyRGNx9fm94TMwqm', 'lrNvy7Wq4hfj8LPUWSIdgQ4O3OZ2', '2025-03-16 14:49:38', '2025-03-18 10:20:16', 0),
+(5, 'smnbzs2', 'simibalazs03272@gmail.com', '$2y$10$uohRIx9b4TQn096M9fnuS.3Sk.ASMgCkUN24jNkJHhOZYR.O9cLFy', 'BenmLFYdIoW9DX33l0wxcksSfe42', '2025-03-16 15:45:52', '2025-03-18 10:20:22', 0),
+(6, 'Simike', 'simike@gmail.com', '$2y$10$KphCczd/cFJR4n6ToU.A9O1Tqs1mDW6JgkdjeQdhdu6myHXmKwppe', 'VggMwuYsYpgWOBdBqaUkxnaResk2', '2025-03-16 16:59:53', '2025-03-18 10:19:59', 0);
 
 --
 -- Megkötések a kiírt táblákhoz
 --
-
---
--- Megkötések a táblához `game_states`
---
-ALTER TABLE `game_states`
-  ADD CONSTRAINT `game_states_ibfk_1` FOREIGN KEY (`match_id`) REFERENCES `matches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `game_states_ibfk_2` FOREIGN KEY (`player1_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `game_states_ibfk_3` FOREIGN KEY (`player2_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Megkötések a táblához `matches`
@@ -216,14 +162,6 @@ ALTER TABLE `ships`
   ADD CONSTRAINT `ships_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `ships_ibfk_2` FOREIGN KEY (`match_id`) REFERENCES `matches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `ships_ibfk_3` FOREIGN KEY (`ship_type_id`) REFERENCES `ship_types` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Megkötések a táblához `shots`
---
-ALTER TABLE `shots`
-  ADD CONSTRAINT `shots_ibfk_1` FOREIGN KEY (`match_id`) REFERENCES `matches` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `shots_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `shots_ibfk_3` FOREIGN KEY (`target_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Megkötések a táblához `statistics`
