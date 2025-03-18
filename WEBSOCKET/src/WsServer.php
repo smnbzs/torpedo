@@ -7,7 +7,7 @@ use Sim\Websocket\BiddingService;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$port = 5500;
+$port = 16108;
 
 $server = IoServer::factory(
     new HttpServer(

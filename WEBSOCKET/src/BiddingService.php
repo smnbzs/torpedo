@@ -4,62 +4,121 @@ namespace Sim\Websocket;
 use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use Exception;
+use mysqli;
 
 class BiddingService implements MessageComponentInterface {
     protected $clients;
     protected $games = [];
-    protected $players = [];
+    protected $players = []; // Játékosok tárolása uid alapján
+    protected $conn; // MySQLi kapcsolat
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
         $this->games = [];
         $this->players = [];
+
+        // MySQLi kapcsolat létrehozása
+        $server = "localhost";
+        $username = "root";
+        $password = "";
+        $database = "torpedo";
+
+        $this->conn = new mysqli($server, $username, $password, $database);
+
+        if ($this->conn->connect_error) {
+            die("Adatbázis kapcsolódási hiba: " . $this->conn->connect_error);
+        }
     }
 
     public function onOpen(ConnectionInterface $conn) {
         $this->clients->attach($conn);
-        echo "Új kapcsolat: {$conn->resourceId}\n";
+        echo "Új kapcsolat létrejött: {$conn->resourceId}\n";
 
-        if (count($this->players) < 2) {
-            $this->players[$conn->resourceId] = [
-                'conn' => $conn,
-                'ships' => [],
-                'shots' => [],
-            ];
-            $conn->send(json_encode([
-                "type" => "waiting",
-                "message" => "Várakozás második játékosra...",
-            ]));
-
-            if (count($this->players) === 2) {
-                $this->startGame();
-            }
-        } else {
-            $conn->send(json_encode([
-                "type" => "error",
-                "message" => "A játék már tele van.",
-            ]));
-            $conn->close();
-        }
+        // Kérjük a klienstől, hogy küldje el a Firebase UID-t
+        $conn->send(json_encode([
+            "type" => "requestUID",
+            "message" => "Kérjük, küldje el a Firebase UID-t.",
+        ]));
     }
 
     public function onMessage(ConnectionInterface $from, $msg) {
         $data = json_decode($msg, true);
 
+        // Ha a kliens elküldi az UID-t
+        if ($data['type'] === 'sendUID') {
+            $uid = $data['uid'];
+
+            // Játékos hozzáadása uid alapján
+            if (count($this->players) < 2 && !isset($this->players[$uid])) {
+                $this->players[$uid] = [
+                    'conn' => $from,
+                    'ships' => [],
+                    'shots' => [],
+                ];
+
+                // Kiírjuk a konzolra az UID-t
+                echo "Új játékos csatlakozott: UID = {$uid}\n";
+
+                // Értesítjük a játékost, hogy várakozik
+                $this->sendToPlayer($uid, [
+                    "type" => "waiting",
+                    "message" => "Várakozás második játékosra...",
+                ]);
+
+                // Ha két játékos csatlakozott, elindítjuk a játékot
+                if (count($this->players) === 2) {
+                    $this->startGame();
+                }
+            } else {
+                // Ha a játék már tele van, hibát küldünk
+                $this->sendToPlayer($uid, [
+                    "type" => "error",
+                    "message" => "A játék már tele van, vagy az UID már használatban van.",
+                ]);
+                $from->close();
+            }
+        }
+
+        // További üzenetek kezelése
         switch ($data['type']) {
             case 'placeShip':
-                $this->handlePlaceShip($from, $data['ships']);
+                $uid = $data['uid']; // UID az üzenetből
+                $this->handlePlaceShip($uid, $data['ships']);
                 break;
             case 'shoot':
-                $this->handleShoot($from, $data['x'], $data['y']);
+                $uid = $data['uid']; // UID az üzenetből
+                $this->handleShoot($uid, $data['x'], $data['y']);
                 break;
         }
     }
 
     public function onClose(ConnectionInterface $conn) {
         $this->clients->detach($conn);
-        unset($this->players[$conn->resourceId]);
-        echo "Kapcsolat bezárva: {$conn->resourceId}\n";
+
+        // Játékos eltávolítása uid alapján
+        foreach ($this->players as $uid => $player) {
+            if ($player['conn'] === $conn) {
+                unset($this->players[$uid]);
+                echo "Játékos kilépett: UID = {$uid}\n"; // Kiírjuk a konzolra
+
+                // Ha a játékos részt vett egy aktív játékban, értesítjük a másik játékost
+                $gameId = $this->findGameByPlayer($uid);
+                if ($gameId && isset($this->games[$gameId])) {
+                    $opponentUid = ($uid === $this->games[$gameId]['players'][0]) 
+                        ? $this->games[$gameId]['players'][1] 
+                        : $this->games[$gameId]['players'][0];
+
+                    $this->sendToPlayer($opponentUid, [
+                        "type" => "gameOver",
+                        "message" => "A másik játékos elhagyta a mérkőzést. A játék véget ért.",
+                    ]);
+
+                    // Töröljük a játékot
+                    unset($this->games[$gameId]);
+                }
+                break;
+            }
+        }
     }
 
     public function onError(ConnectionInterface $conn, Exception $e) {
@@ -68,35 +127,33 @@ class BiddingService implements MessageComponentInterface {
     }
 
     private function startGame() {
-        $playerIds = array_keys($this->players);
+        $playerUids = array_keys($this->players);
         $gameId = uniqid();
 
         $this->games[$gameId] = [
-            'players' => $playerIds,
-            'currentTurn' => $playerIds[0],
+            'players' => $playerUids,
+            'currentTurn' => $playerUids[0],
         ];
 
-        foreach ($this->players as $playerId => $player) {
-            $player['conn']->send(json_encode([
+        foreach ($this->players as $uid => $player) {
+            $this->sendToPlayer($uid, [
                 "type" => "start",
                 "message" => "A játék elindult! Helyezd el a hajóidat.",
-                "yourTurn" => ($playerId === $this->games[$gameId]['currentTurn']),
-            ]));
+                "yourTurn" => ($uid === $this->games[$gameId]['currentTurn']),
+            ]);
         }
     }
 
-    private function handlePlaceShip($from, $ships) {
-        $playerId = $from->resourceId;
-
-        if (!isset($this->players[$playerId])) {
-            $from->send(json_encode([
+    private function handlePlaceShip($uid, $ships) {
+        if (!isset($this->players[$uid])) {
+            $this->sendToPlayer($uid, [
                 "type" => "error",
                 "message" => "Hiba: A játékos nem található!",
-            ]));
+            ]);
             return;
         }
 
-        $this->players[$playerId]['ships'] = $ships;
+        $this->players[$uid]['ships'] = $ships;
 
         $allShipsPlaced = true;
         foreach ($this->players as $player) {
@@ -108,68 +165,66 @@ class BiddingService implements MessageComponentInterface {
 
         if ($allShipsPlaced) {
             foreach ($this->players as $player) {
-                $player['conn']->send(json_encode([
+                $this->sendToPlayer($player['uid'], [
                     "type" => "shipsPlaced",
                     "message" => "Mindkét játékos elhelyezte a hajóit. A játék kezdődik!",
-                ]));
+                ]);
             }
             $this->startShootingPhase();
         }
     }
 
     private function startShootingPhase() {
-        $playerIds = array_keys($this->players);
+        $playerUids = array_keys($this->players);
         $gameId = array_key_last($this->games);
 
-        foreach ($this->players as $playerId => $player) {
-            $player['conn']->send(json_encode([
+        foreach ($this->players as $uid => $player) {
+            $this->sendToPlayer($uid, [
                 "type" => "turn",
-                "yourTurn" => ($playerId === $this->games[$gameId]['currentTurn']),
-            ]));
+                "yourTurn" => ($uid === $this->games[$gameId]['currentTurn']),
+            ]);
         }
     }
 
-    private function handleShoot($from, $x, $y) {
-        $playerId = $from->resourceId;
-
-        if (!isset($this->players[$playerId])) {
-            $from->send(json_encode([
+    private function handleShoot($uid, $x, $y) {
+        if (!isset($this->players[$uid])) {
+            $this->sendToPlayer($uid, [
                 "type" => "error",
                 "message" => "Hiba: A játékos nem található!",
-            ]));
+            ]);
             return;
         }
 
-        $gameId = $this->findGameByPlayer($playerId);
+        $gameId = $this->findGameByPlayer($uid);
         if (!$gameId || !isset($this->games[$gameId])) {
-            $from->send(json_encode([
+            $this->sendToPlayer($uid, [
                 "type" => "error",
                 "message" => "Hiba: A játék nem található!",
-            ]));
+            ]);
             return;
         }
 
         $game = $this->games[$gameId];
 
-        if ($playerId !== $game['currentTurn']) {
-            $from->send(json_encode([
+        if ($uid !== $game['currentTurn']) {
+            $this->sendToPlayer($uid, [
                 "type" => "error",
                 "message" => "Nem te következel!",
-            ]));
+            ]);
             return;
         }
 
-        $opponentId = ($playerId === $game['players'][0]) ? $game['players'][1] : $game['players'][0];
+        $opponentUid = ($uid === $game['players'][0]) ? $game['players'][1] : $game['players'][0];
 
-        if (!isset($this->players[$opponentId])) {
-            $from->send(json_encode([
+        if (!isset($this->players[$opponentUid])) {
+            $this->sendToPlayer($uid, [
                 "type" => "error",
                 "message" => "Hiba: Az ellenfél nem található!",
-            ]));
+            ]);
             return;
         }
 
-        $opponentShips = $this->players[$opponentId]['ships'];
+        $opponentShips = $this->players[$opponentUid]['ships'];
         $hit = false;
 
         foreach ($opponentShips as $ship) {
@@ -179,30 +234,30 @@ class BiddingService implements MessageComponentInterface {
             }
         }
 
-        $this->players[$playerId]['shots'][] = ['x' => $x, 'y' => $y, 'hit' => $hit];
+        $this->players[$uid]['shots'][] = ['x' => $x, 'y' => $y, 'hit' => $hit];
 
-        $from->send(json_encode([
+        $this->sendToPlayer($uid, [
             "type" => "shotResult",
             "x" => $x,
             "y" => $y,
             "hit" => $hit,
-        ]));
+        ]);
 
-        $this->checkWin($opponentId);
+        $this->checkWin($opponentUid);
 
-        $game['currentTurn'] = $opponentId;
+        $game['currentTurn'] = $opponentUid;
         $this->games[$gameId] = $game;
 
         foreach ($this->players as $id => $player) {
-            $player['conn']->send(json_encode([
+            $this->sendToPlayer($id, [
                 "type" => "turn",
                 "yourTurn" => ($id === $game['currentTurn']),
-            ]));
+            ]);
         }
     }
 
-    private function checkWin($opponentId) {
-        $opponentShips = $this->players[$opponentId]['ships'];
+    private function checkWin($opponentUid) {
+        $opponentShips = $this->players[$opponentUid]['ships'];
         $playerShots = $this->players[$this->games[array_key_last($this->games)]['currentTurn']]['shots'];
 
         $remainingShips = array_filter($opponentShips, function($ship) use ($playerShots) {
@@ -215,26 +270,100 @@ class BiddingService implements MessageComponentInterface {
         });
 
         if (count($remainingShips) === 0) {
-            $winnerId = $this->games[array_key_last($this->games)]['currentTurn'];
-            $this->endGame($winnerId);
+            $winnerUid = $this->games[array_key_last($this->games)]['currentTurn'];
+            $this->endGame($winnerUid);
         }
     }
 
-    private function endGame($winnerId) {
-        foreach ($this->players as $playerId => $player) {
-            $player['conn']->send(json_encode([
+    private function endGame($winnerUid) {
+        foreach ($this->players as $uid => $player) {
+            $this->sendToPlayer($uid, [
                 "type" => "end",
-                "message" => ($playerId === $winnerId) ? "Nyertél!" : "Vesztettél!",
-            ]));
+                "message" => ($uid === $winnerUid) ? "Nyertél!" : "Vesztettél!",
+            ]);
+        }
+
+        // Mérkőzés eredményének mentése
+        $this->saveMatchResult($winnerUid);
+    }
+
+    private function saveMatchResult($winnerUid) {
+        $gameId = array_key_last($this->games);
+        if (!$gameId || !isset($this->games[$gameId])) {
+            return;
+        }
+
+        $game = $this->games[$gameId];
+        $player1Uid = $game['players'][0];
+        $player2Uid = $game['players'][1];
+
+        // Játékosok találatainak számolása
+        $player1Hits = count(array_filter($this->players[$player1Uid]['shots'], function($shot) {
+            return $shot['hit'];
+        }));
+        $player2Hits = count(array_filter($this->players[$player2Uid]['shots'], function($shot) {
+            return $shot['hit'];
+        }));
+
+        // Mérkőzés időtartamának számolása (példa: 10 perc)
+        $duration = 10; // Ezt pontosítani kell a valós időtartam alapján
+
+        // Adatbázisba mentés
+        try {
+            // Játékosok ID-jának lekérése
+            $player1Id = $this->getUserIdByUid($player1Uid);
+            $player2Id = $this->getUserIdByUid($player2Uid);
+            $winnerId = $this->getUserIdByUid($winnerUid);
+
+            if ($player1Id && $player2Id && $winnerId) {
+                $sql = "INSERT INTO matches (match_date, player1_id, player2_id, winner_id, player1_hits, player2_hits, duration)
+                        VALUES (NOW(), ?, ?, ?, ?, ?, ?)";
+                $stmt = $this->conn->prepare($sql);
+                $stmt->bind_param("iiiiii", $player1Id, $player2Id, $winnerId, $player1Hits, $player2Hits, $duration);
+                $stmt->execute();
+                $stmt->close();
+            }
+        } catch (Exception $e) {
+            echo "Hiba a mérkőzés eredményének mentésekor: " . $e->getMessage();
         }
     }
 
-    private function findGameByPlayer($playerId) {
+    private function getUserIdByUid($uid) {
+        // Firebase UID alapján lekérjük a felhasználó adatbázisbeli ID-ját
+        try {
+            $sql = "SELECT id FROM users WHERE firebase_uid = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param("s", $uid);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+
+            return $row ? $row['id'] : null;
+        } catch (Exception $e) {
+            echo "Hiba a felhasználó ID lekérésekor: " . $e->getMessage();
+            return null;
+        }
+    }
+
+    private function findGameByPlayer($uid) {
         foreach ($this->games as $gameId => $game) {
-            if (in_array($playerId, $game['players'])) {
+            if (in_array($uid, $game['players'])) {
                 return $gameId;
             }
         }
         return null;
+    }
+
+    /**
+     * Segédfüggvény az üzenetek küldéséhez a játékosoknak.
+     * Ellenőrzi, hogy a kapcsolat érvényes-e.
+     */
+    private function sendToPlayer($uid, $message) {
+        if (isset($this->players[$uid]['conn']) && $this->players[$uid]['conn'] instanceof ConnectionInterface) {
+            $this->players[$uid]['conn']->send(json_encode($message));
+        } else {
+            echo "Hiba: A játékos kapcsolata nem érvényes (UID: {$uid}).\n";
+        }
     }
 }
