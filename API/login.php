@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($row = mysqli_fetch_assoc($result)) {
         if (password_verify($password, $row["password_hash"])) {
             if ($row["firebase_uid"] === $firebaseUID) {
-                // Sikeres bejelentkezés, frissítjük az is_active mezőt
+               
                 $update_sql = "UPDATE users SET is_active = 1 WHERE email = ?";
                 $update_stmt = mysqli_prepare($conn, $update_sql);
                 mysqli_stmt_bind_param($update_stmt, "s", $email);
@@ -54,4 +54,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     mysqli_stmt_close($stmt);
     mysqli_close($conn);
 }
-?>
+?> 

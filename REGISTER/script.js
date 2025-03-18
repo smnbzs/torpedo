@@ -11,21 +11,18 @@ const firebaseConfig = {
     measurementId: "G-K608XGYTK7"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// A regisztrációs gomb, amit a felhasználó kattint
 const submit = document.getElementById("submit");
 
 submit.addEventListener("click", function(event) {
-    event.preventDefault(); // Ne frissítse az oldalt
+    event.preventDefault();
 
     var username = document.getElementById("username").value;
     var email = document.getElementById("email").value;
     var password = document.getElementById("password").value;
     var confirmpassword = document.getElementById("confirmpassword").value;
 
-    // Az email és a jelszó formátumának ellenőrzése
     var passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     var emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
@@ -46,7 +43,6 @@ submit.addEventListener("click", function(event) {
             const user = userCredential.user;
             alert("Felhasználó regisztrálva a Firebase-ben!");
 
-            // Küldés a PHP API-nak MySQL adatbázisba
             fetch("http://localhost/torpedo/api/register.php", {
                 method: "POST",
                 headers: {
@@ -56,7 +52,7 @@ submit.addEventListener("click", function(event) {
                     "username": username,
                     "email": email,
                     "password": password,
-                    "uid": user.uid // Firebase UID
+                    "uid": user.uid 
                 })
             })
             .then(response => response.json())

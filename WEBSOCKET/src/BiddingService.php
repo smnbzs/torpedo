@@ -9,15 +9,14 @@ use mysqli;
 class BiddingService implements MessageComponentInterface {
     protected $clients;
     protected $games = [];
-    protected $players = []; // Játékosok tárolása uid alapján
-    protected $conn; // MySQLi kapcsolat
+    protected $players = []; 
+    protected $conn; 
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
         $this->games = [];
         $this->players = [];
 
-        // MySQLi kapcsolat létrehozása
         $server = "localhost";
         $username = "root";
         $password = "";
@@ -34,7 +33,6 @@ class BiddingService implements MessageComponentInterface {
         $this->clients->attach($conn);
         echo "Új kapcsolat létrejött: {$conn->resourceId}\n";
 
-        // Kérjük a klienstől, hogy küldje el a Firebase UID-t
         $conn->send(json_encode([
             "type" => "requestUID",
             "message" => "Kérjük, küldje el a Firebase UID-t.",
@@ -44,11 +42,9 @@ class BiddingService implements MessageComponentInterface {
     public function onMessage(ConnectionInterface $from, $msg) {
         $data = json_decode($msg, true);
 
-        // Ha a kliens elküldi az UID-t
         if ($data['type'] === 'sendUID') {
             $uid = $data['uid'];
 
-            // Játékos hozzáadása uid alapján
             if (count($this->players) < 2 && !isset($this->players[$uid])) {
                 $this->players[$uid] = [
                     'conn' => $from,
@@ -56,21 +52,17 @@ class BiddingService implements MessageComponentInterface {
                     'shots' => [],
                 ];
 
-                // Kiírjuk a konzolra az UID-t
                 echo "Új játékos csatlakozott: UID = {$uid}\n";
 
-                // Értesítjük a játékost, hogy várakozik
                 $this->sendToPlayer($uid, [
                     "type" => "waiting",
                     "message" => "Várakozás második játékosra...",
                 ]);
 
-                // Ha két játékos csatlakozott, elindítjuk a játékot
                 if (count($this->players) === 2) {
                     $this->startGame();
                 }
             } else {
-                // Ha a játék már tele van, hibát küldünk
                 $this->sendToPlayer($uid, [
                     "type" => "error",
                     "message" => "A játék már tele van, vagy az UID már használatban van.",
@@ -79,14 +71,13 @@ class BiddingService implements MessageComponentInterface {
             }
         }
 
-        // További üzenetek kezelése
         switch ($data['type']) {
             case 'placeShip':
-                $uid = $data['uid']; // UID az üzenetből
+                $uid = $data['uid'];
                 $this->handlePlaceShip($uid, $data['ships']);
                 break;
             case 'shoot':
-                $uid = $data['uid']; // UID az üzenetből
+                $uid = $data['uid'];
                 $this->handleShoot($uid, $data['x'], $data['y']);
                 break;
         }
@@ -95,13 +86,11 @@ class BiddingService implements MessageComponentInterface {
     public function onClose(ConnectionInterface $conn) {
         $this->clients->detach($conn);
 
-        // Játékos eltávolítása uid alapján
         foreach ($this->players as $uid => $player) {
             if ($player['conn'] === $conn) {
                 unset($this->players[$uid]);
-                echo "Játékos kilépett: UID = {$uid}\n"; // Kiírjuk a konzolra
+                echo "Játékos kilépett: UID = {$uid}\n"; 
 
-                // Ha a játékos részt vett egy aktív játékban, értesítjük a másik játékost
                 $gameId = $this->findGameByPlayer($uid);
                 if ($gameId && isset($this->games[$gameId])) {
                     $opponentUid = ($uid === $this->games[$gameId]['players'][0]) 
@@ -113,7 +102,6 @@ class BiddingService implements MessageComponentInterface {
                         "message" => "A másik játékos elhagyta a mérkőzést. A játék véget ért.",
                     ]);
 
-                    // Töröljük a játékot
                     unset($this->games[$gameId]);
                 }
                 break;
@@ -283,7 +271,6 @@ class BiddingService implements MessageComponentInterface {
             ]);
         }
 
-        // Mérkőzés eredményének mentése
         $this->saveMatchResult($winnerUid);
     }
 
@@ -297,7 +284,6 @@ class BiddingService implements MessageComponentInterface {
         $player1Uid = $game['players'][0];
         $player2Uid = $game['players'][1];
 
-        // Játékosok találatainak számolása
         $player1Hits = count(array_filter($this->players[$player1Uid]['shots'], function($shot) {
             return $shot['hit'];
         }));
@@ -305,12 +291,10 @@ class BiddingService implements MessageComponentInterface {
             return $shot['hit'];
         }));
 
-        // Mérkőzés időtartamának számolása (példa: 10 perc)
-        $duration = 10; // Ezt pontosítani kell a valós időtartam alapján
+        $duration = 10; 
 
-        // Adatbázisba mentés
+        
         try {
-            // Játékosok ID-jának lekérése
             $player1Id = $this->getUserIdByUid($player1Uid);
             $player2Id = $this->getUserIdByUid($player2Uid);
             $winnerId = $this->getUserIdByUid($winnerUid);
@@ -329,7 +313,6 @@ class BiddingService implements MessageComponentInterface {
     }
 
     private function getUserIdByUid($uid) {
-        // Firebase UID alapján lekérjük a felhasználó adatbázisbeli ID-ját
         try {
             $sql = "SELECT id FROM users WHERE firebase_uid = ?";
             $stmt = $this->conn->prepare($sql);
@@ -355,10 +338,6 @@ class BiddingService implements MessageComponentInterface {
         return null;
     }
 
-    /**
-     * Segédfüggvény az üzenetek küldéséhez a játékosoknak.
-     * Ellenőrzi, hogy a kapcsolat érvényes-e.
-     */
     private function sendToPlayer($uid, $message) {
         if (isset($this->players[$uid]['conn']) && $this->players[$uid]['conn'] instanceof ConnectionInterface) {
             $this->players[$uid]['conn']->send(json_encode($message));

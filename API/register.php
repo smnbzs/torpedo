@@ -7,17 +7,15 @@ header("Access-Control-Allow-Headers: Content-Type");
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $rawdata = file_get_contents("php://input");
     $data = json_decode($rawdata, true);
-
-    // A felhasználói adatok
+    
     $username = $data["username"];
     $email = $data["email"];
     $password = $data["password"];
-    $uid = $data["uid"];  // Firebase UID
-
-    // Jelszó hashelése
+    $uid = $data["uid"];  
+    
     $password_hash = password_hash($password, PASSWORD_BCRYPT);
 
-    // SQL lekérdezés a felhasználó adatainak mentéséhez
+  
     $sql = "INSERT INTO `users`(`username`, `email`, `password_hash`, `firebase_uid`) VALUES (?, ?, ?, ?)";
     $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "ssss", $username, $email, $password_hash, $uid);

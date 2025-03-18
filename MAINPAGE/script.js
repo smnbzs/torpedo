@@ -1,21 +1,17 @@
-// Function to get a cookie by name
 function getCookie(name) {
     let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     if (match) return match[2];
     return null;
 }
 
-// Function to delete a cookie by name
 function deleteCookie(name) {
     document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 }
 
-// Function to handle logout
 function logoutUser() {
     var userUID = getCookie("userUID");
 
-    if (userUID) {
-        // Call the logout API
+    if (userUID) { 
         fetch("http://localhost/torpedo/api/logout.php", {
             method: "POST",
             headers: {
@@ -28,7 +24,6 @@ function logoutUser() {
         .then(response => response.json())
         .then(data => {
             if (data.status === "success") {
-                // Delete the cookies and redirect to login page
                 deleteCookie("userUID");
                 deleteCookie("userEmail");
                 deleteCookie("loginTime");
@@ -46,21 +41,18 @@ function logoutUser() {
     }
 }
 
-// Event Listener to handle page load
 window.addEventListener("load", function() {
     var userUID = getCookie("userUID");
     var userEmail = getCookie("userEmail");
 
     if (userUID && userEmail) {
-        // Check if the cookie has expired
         var loginTime = getCookie("loginTime");
         if (loginTime) {
             var currentTime = new Date().getTime();
-            var expirationTime = parseInt(loginTime) + (60 * 60 * 1000); // 1 hour in milliseconds
+            var expirationTime = parseInt(loginTime) + (60 * 60 * 1000); 
             if (currentTime > expirationTime) {
-                // If cookie expired, log the user out
                 alert("Session expired. Please log in again.");
-                logoutUser(); // Call logout function
+                logoutUser(); 
             }
         }
     } else {
@@ -68,10 +60,8 @@ window.addEventListener("load", function() {
         window.location.href = "../login/login.html";
     }
 
-    // Display the username
     username();
 
-    // Add event listener to the logout button
     const logoutButton = document.getElementById("logout");
     if (logoutButton) {
         logoutButton.addEventListener("click", function() {
@@ -80,7 +70,6 @@ window.addEventListener("load", function() {
     }
 });
 
-// Function to handle username display
 function username() {
     var userUID = getCookie("userUID");
     if (!userUID) return;
