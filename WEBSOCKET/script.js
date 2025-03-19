@@ -139,7 +139,7 @@ function handleGameEnd(message) {
 
     setTimeout(() => {
         alert(message.message);
-        window.location.href = "../LOGIN/login.html";
+        window.location.href = "../MAINPAGE/mainpage.html";
     }, 1500);
 }
 

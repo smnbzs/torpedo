@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($row = mysqli_fetch_assoc($result)) {
         if (password_verify($password, $row["password_hash"])) {
-            if ($row["firebase_uid"] === $firebaseUID) {
+            if ($row["firebase_uid"] == $firebaseUID) {
                
                 $update_sql = "UPDATE users SET is_active = 1 WHERE email = ?";
                 $update_stmt = mysqli_prepare($conn, $update_sql);

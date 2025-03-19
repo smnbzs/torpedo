@@ -11,11 +11,13 @@ class BiddingService implements MessageComponentInterface {
     protected $games = [];
     protected $players = []; 
     protected $conn; 
+    protected $rooms = [];
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
         $this->games = [];
         $this->players = [];
+        $this->rooms = [];
 
         $server = "localhost";
         $username = "root";
@@ -45,29 +47,38 @@ class BiddingService implements MessageComponentInterface {
         if ($data['type'] == 'sendUID') {
             $uid = $data['uid'];
 
-            if (count($this->players) < 2 && !isset($this->players[$uid])) {
-                $this->players[$uid] = [
-                    'conn' => $from,
-                    'ships' => [],
-                    'shots' => [],
-                ];
-
-                echo "Új játékos csatlakozott: UID = {$uid}\n";
-
-                $this->sendToPlayer($uid, [
-                    "type" => "waiting",
-                    "message" => "Várakozás második játékosra...",
-                ]);
-
-                if (count($this->players) == 2) {
-                    $this->startGame();
-                }
-            } else {
+            $roomId = $this->findRoomByPlayer($uid);
+            if ($roomId !== null) {
                 $this->sendToPlayer($uid, [
                     "type" => "error",
-                    "message" => "A játék már tele van, vagy az UID már használatban van.",
+                    "message" => "Már csatlakoztál egy szobához.",
                 ]);
-                $from->close();
+                return;
+            }
+
+            $roomId = $this->findAvailableRoom();
+            if ($roomId === null) {
+                $roomId = $this->createRoom();
+            }
+
+            $this->rooms[$roomId]['players'][] = $uid;
+            $this->players[$uid] = [
+                'conn' => $from,
+                'ships' => [],
+                'shots' => [],
+                'roomId' => $roomId,
+            ];
+
+            echo "#{$roomId}-es szoba (" . count($this->rooms[$roomId]['players']) . "/2)\n";
+            echo "Játékosok: " . json_encode($this->rooms[$roomId]['players']) . "\n";
+
+            $this->sendToPlayer($uid, [
+                "type" => "waiting",
+                "message" => "Várakozás második játékosra...",
+            ]);
+
+            if (count($this->rooms[$roomId]['players']) == 2) {
+                $this->startGame($roomId);
             }
         }
 
@@ -88,21 +99,35 @@ class BiddingService implements MessageComponentInterface {
 
         foreach ($this->players as $uid => $player) {
             if ($player['conn'] == $conn) {
+                $roomId = $player['roomId'];
                 unset($this->players[$uid]);
                 echo "Játékos kilépett: UID = {$uid}\n"; 
 
-                $gameId = $this->findGameByPlayer($uid);
-                if ($gameId && isset($this->games[$gameId])) {
-                    $opponentUid = ($uid == $this->games[$gameId]['players'][0]) 
-                        ? $this->games[$gameId]['players'][1] 
-                        : $this->games[$gameId]['players'][0];
+                if (isset($this->rooms[$roomId])) {
+                    $this->rooms[$roomId]['players'] = array_filter($this->rooms[$roomId]['players'], function($playerUid) use ($uid) {
+                        return $playerUid != $uid;
+                    });
 
-                    $this->sendToPlayer($opponentUid, [
-                        "type" => "gameOver",
-                        "message" => "A másik játékos elhagyta a mérkőzést. A játék véget ért.",
-                    ]);
+                    echo "#{$roomId}-es szoba (" . count($this->rooms[$roomId]['players']) . "/2)\n";
 
-                    unset($this->games[$gameId]);
+                    if (count($this->rooms[$roomId]['players']) == 0) {
+                        unset($this->rooms[$roomId]);
+                        echo "#{$roomId}-es szoba törölve.\n";
+                    } else {
+                        $gameId = $this->findGameByPlayer($uid);
+                        if ($gameId && isset($this->games[$gameId])) {
+                            $game = $this->games[$gameId];
+                            if (!isset($game['ended'])) {
+                                $opponentUid = $this->rooms[$roomId]['players'][0] ?? null;
+                                if ($opponentUid) {
+                                    $this->sendToPlayer($opponentUid, [
+                                        "type" => "gameOver",
+                                        "message" => "A másik játékos elhagyta a mérkőzést. A játék véget ért.",
+                                    ]);
+                                }
+                            }
+                        }
+                    }
                 }
                 break;
             }
@@ -114,16 +139,45 @@ class BiddingService implements MessageComponentInterface {
         $conn->close();
     }
 
-    private function startGame() {
-        $playerUids = array_keys($this->players);
+    private function createRoom() {
+        $roomId = count($this->rooms) + 1;
+        $this->rooms[$roomId] = [
+            'players' => [],
+        ];
+        echo "#{$roomId}-es szoba létrehozva.\n";
+        return $roomId;
+    }
+
+    private function findAvailableRoom() {
+        foreach ($this->rooms as $roomId => $room) {
+            if (count($room['players']) < 2) {
+                return $roomId;
+            }
+        }
+        return null;
+    }
+
+    private function findRoomByPlayer($uid) {
+        foreach ($this->rooms as $roomId => $room) {
+            if (in_array($uid, $room['players'])) {
+                return $roomId;
+            }
+        }
+        return null;
+    }
+
+    private function startGame($roomId) {
+        $playerUids = $this->rooms[$roomId]['players'];
         $gameId = uniqid();
 
         $this->games[$gameId] = [
             'players' => $playerUids,
             'currentTurn' => $playerUids[0],
+            'roomId' => $roomId,
+            'ended' => false,
         ];
 
-        foreach ($this->players as $uid => $player) {
+        foreach ($playerUids as $uid) {
             $this->sendToPlayer($uid, [
                 "type" => "start",
                 "message" => "A játék elindult! Helyezd el a hajóidat.",
@@ -152,8 +206,8 @@ class BiddingService implements MessageComponentInterface {
         }
 
         if ($allShipsPlaced) {
-            foreach ($this->players as $player) {
-                $this->sendToPlayer($player['uid'], [
+            foreach ($this->players as $playerUid => $player) {
+                $this->sendToPlayer($playerUid, [
                     "type" => "shipsPlaced",
                     "message" => "Mindkét játékos elhelyezte a hajóit. A játék kezdődik!",
                 ]);
@@ -245,12 +299,27 @@ class BiddingService implements MessageComponentInterface {
     }
 
     private function checkWin($opponentUid) {
+        if (!isset($this->players[$opponentUid]['ships'])) {
+            return;
+        }
+
         $opponentShips = $this->players[$opponentUid]['ships'];
-        $playerShots = $this->players[$this->games[array_key_last($this->games)]['currentTurn']]['shots'];
+        $currentTurnUid = $this->games[array_key_last($this->games)]['currentTurn'];
+
+        if (!isset($this->players[$currentTurnUid]['shots'])) {
+            return;
+        }
+
+        $playerShots = $this->players[$currentTurnUid]['shots'];
+
+        if (!is_array($opponentShips) || !is_array($playerShots)) {
+            return;
+        }
 
         $remainingShips = array_filter($opponentShips, function($ship) use ($playerShots) {
             foreach ($playerShots as $shot) {
-                if ($shot['x'] == $ship['x'] && $shot['y'] == $ship['y'] && $shot['hit']) {
+                if (isset($shot['x'], $shot['y'], $shot['hit']) && 
+                    $shot['x'] == $ship['x'] && $shot['y'] == $ship['y'] && $shot['hit']) {
                     return false;
                 }
             }
@@ -264,6 +333,13 @@ class BiddingService implements MessageComponentInterface {
     }
 
     private function endGame($winnerUid) {
+        $gameId = array_key_last($this->games);
+        if (!$gameId || !isset($this->games[$gameId])) {
+            return;
+        }
+
+        $this->games[$gameId]['ended'] = true;
+
         foreach ($this->players as $uid => $player) {
             $this->sendToPlayer($uid, [
                 "type" => "end",
@@ -293,7 +369,6 @@ class BiddingService implements MessageComponentInterface {
 
         $duration = 10; 
 
-        
         try {
             $player1Id = $this->getUserIdByUid($player1Uid);
             $player2Id = $this->getUserIdByUid($player2Uid);
