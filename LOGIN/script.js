@@ -20,7 +20,25 @@ submit.addEventListener("click", function(event) {
     var email = document.getElementById("email").value;
     var password = document.getElementById("password").value;
 
-    const auth = getAuth();
+    fetch("http://localhost/torpedo/api/isActive", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "email": email
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data)
+        if (data.isActive == 1) {
+            alert("This account is currently suspended. Please contact support.");
+            return;
+        }
+        else
+        {
+            const auth = getAuth();
 
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
@@ -61,4 +79,7 @@ submit.addEventListener("click", function(event) {
             const errorMessage = error.message;
             alert("There was an issue encountered while logging in.: " + errorMessage);
         });
+        }
+    });
+    
 });
