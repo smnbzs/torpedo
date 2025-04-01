@@ -23,10 +23,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $result = mysqli_stmt_get_result($stmt);
 
     if ($row = mysqli_fetch_assoc($result)) {
-        // Return a consistent JSON structure
         echo json_encode(["isActive" => (int)$row["is_active"]]); 
     } else {
-        // User not found case
         echo json_encode(["error" => "User not found"]);
     }
     
@@ -35,6 +33,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit;
 }
 
-// Handle cases where request method is not POST
 echo json_encode(["error" => "Invalid request method"]);
 ?>
