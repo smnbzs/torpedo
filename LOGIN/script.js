@@ -45,8 +45,8 @@ submit.addEventListener("click", function(event) {
             const user = userCredential.user;
             const firebaseUID = user.uid;
 
-            document.cookie = `userUID=${firebaseUID}; path=/; max-age=3600`;  
-            document.cookie = `userEmail=${email}; path=/; max-age=3600`;  
+            document.cookie = `userUID=${firebaseUID}; path=/; max-age=3600;Secure; SameSite=Strict`;  
+            document.cookie = `userEmail=${email}; path=/; max-age=3600;Secure; SameSite=Strict`;  
 
             alert("You have successfully logged in.");
 
