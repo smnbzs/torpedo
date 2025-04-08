@@ -74,7 +74,7 @@ function username() {
     var userUID = getCookie("userUID");
     if (!userUID) return;
 
-    fetch("http://localhost/torpedo/api/getusername.php", {
+    fetch("http://localhost/torpedo/api/getusername", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -86,10 +86,22 @@ function username() {
     .then(response => response.json())
     .then(data => {
         if (data.status == "success") {
-            document.getElementById("username").innerText = data.username;
+           
         } else {
             console.error("Error:", data.message);
         }
     })
-    .catch(error => console.error("Fetch error:", error));
+    .catch(error => console.error("Fetch error:", error));    
 }
+function numberofplayers()
+{
+    fetch("http://localhost/torpedo/api/countplayers")
+    .then(response => response.json())
+    .then(data => {
+        var cap = document.getElementById("cap");
+        cap.innerHTML = "Currently available players: " + data.active_users_count
+    })  
+}
+setInterval(function() {
+    numberofplayers();
+}, 1000);
