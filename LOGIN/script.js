@@ -20,7 +20,7 @@ submit.addEventListener("click", function(event) {
     var email = document.getElementById("email").value;
     var password = document.getElementById("password").value;
 
-    fetch("http://localhost/torpedo/api/isActive", {
+    fetch("http://localhost/torpedo/api/isActive.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
