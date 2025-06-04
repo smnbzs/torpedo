@@ -90,6 +90,10 @@ function handleShootClick(event) {
         return;
     }
 
+    // Letiltjuk a táblát a lövés után
+    disableBoard(shootingBoard);
+    waitingForOpponent = true;
+
     socket.send(JSON.stringify({
         type: 'shoot',
         uid: userUID,
@@ -107,8 +111,6 @@ function submitShips() {
     doneButton.disabled = true;
     disableBoard(placementBoard);
     updateStatus("Várakozás a második játékosra...");
-    waitingForOpponent = true;
-    showWaitingMessage(true);
 }
 
 function handleSocketMessage(event) {
@@ -116,30 +118,28 @@ function handleSocketMessage(event) {
 
     switch (message.type) {
         case 'waiting':
-            updateStatus(message.message);
+            updateStatus("Várakozás a játékosra...");
             waitingForOpponent = true;
-            showWaitingMessage(true);
             break;
         case 'start':
             waitingForOpponent = false;
             enableBoard(placementBoard);
-            updateStatus(message.message);
+            updateStatus("Helyezd el a hajóidat!");
             showWaitingMessage(false);
             break;
         case 'shipsPlaced':
             updateStatus(message.message);
             break;
         case 'turn':
-            waitingForOpponent = !message.yourTurn;
             gameActive = true;
-            showWaitingMessage(waitingForOpponent);
+            waitingForOpponent = !message.yourTurn;
             
             if (message.yourTurn) {
                 enableBoard(shootingBoard);
-                updateStatus("Te következel!");
+                updateStatus("A te köröd - Lőj!");
             } else {
                 disableBoard(shootingBoard);
-                updateStatus("Az ellenfél következik...");
+                updateStatus("Az ellenfél lő...");
             }
             break;
         case 'shotResult':
@@ -161,9 +161,6 @@ function handleShotResult(message) {
     if (cell) {
         cell.classList.add(message.hit ? 'hit' : 'miss');
     }
-
-    waitingForOpponent = true;
-    showWaitingMessage(true);
 
     socket.send(JSON.stringify({
         type: 'getTurn',
