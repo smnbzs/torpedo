@@ -99,7 +99,7 @@ function numberofplayers()
     .then(response => response.json())
     .then(data => {
         var cap = document.getElementById("cap");
-        cap.innerHTML = "Currently available players: " + data.active_users_count
+        cap.innerHTML = "Available players: " + data.active_users_count
     })  
 }
 setInterval(function() {
