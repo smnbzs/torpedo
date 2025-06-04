@@ -90,10 +90,6 @@ function handleShootClick(event) {
         return;
     }
 
-    // Letiltjuk a táblát a lövés után
-    disableBoard(shootingBoard);
-    waitingForOpponent = true;
-
     socket.send(JSON.stringify({
         type: 'shoot',
         uid: userUID,
@@ -111,6 +107,7 @@ function submitShips() {
     doneButton.disabled = true;
     disableBoard(placementBoard);
     updateStatus("Várakozás a második játékosra...");
+    waitingForOpponent = true;
 }
 
 function handleSocketMessage(event) {
@@ -118,28 +115,29 @@ function handleSocketMessage(event) {
 
     switch (message.type) {
         case 'waiting':
-            updateStatus("Várakozás a játékosra...");
+            updateStatus(message.message);
             waitingForOpponent = true;
             break;
         case 'start':
             waitingForOpponent = false;
+            gameActive = true;
             enableBoard(placementBoard);
-            updateStatus("Helyezd el a hajóidat!");
-            showWaitingMessage(false);
-            break;
-        case 'shipsPlaced':
             updateStatus(message.message);
+            waitingDiv.style.display = 'none';
+            stopWaitingTimer();
             break;
         case 'turn':
-            gameActive = true;
             waitingForOpponent = !message.yourTurn;
+            gameActive = true;
+            waitingDiv.style.display = 'none';
+            stopWaitingTimer();
             
             if (message.yourTurn) {
                 enableBoard(shootingBoard);
-                updateStatus("A te köröd - Lőj!");
+                updateStatus("Te következel!");
             } else {
                 disableBoard(shootingBoard);
-                updateStatus("Az ellenfél lő...");
+                updateStatus("Az ellenfél következik...");
             }
             break;
         case 'shotResult':
@@ -167,43 +165,46 @@ function handleShotResult(message) {
         uid: userUID
     }));
 }
+
 function handleGameEnd(message) {
     gameActive = false;
-    waitingForOpponent = false; // Állapot konzisztens tartása
-    stopWaitingTimer(); // Leállítjuk az esetlegesen futó időzítőt
+    waitingForOpponent = false;
+    stopWaitingTimer();
+
+    // Magyar üzenetek beállítása
+    let gameEndMessage = "";
+    if (message.message.includes("won")) {
+        gameEndMessage = "Gratulálunk, nyertél!";
+    } else if (message.message.includes("lost")) {
+        gameEndMessage = "Sajnáljuk, vesztettél!";
+    } else {
+        gameEndMessage = message.message; // Egyéb üzenetek esetén
+    }
 
     // Előző tartalom törlése és a játék végeredményének beállítása
-    waitingDiv.innerHTML = `<h2>Meccs véget ért</h2><p>${message.message}</p>`; // A szerver üzenetét használjuk
+    waitingDiv.innerHTML = `
+        <h2>Játék vége</h2>
+        <p>${gameEndMessage}</p>
+    `;
 
     // A navigációs gomb létrehozása
     const backButton = document.createElement('button');
     backButton.textContent = 'Vissza a főoldalra';
-    backButton.classList.add('end-game-button'); // Opcionális: osztály a stílusozáshoz
+    backButton.classList.add('end-game-button');
     backButton.addEventListener('click', () => {
-        navigateTo("../MAINPAGE/mainpage.html"); // Navigálás a főoldalra
+        navigateTo("../MAINPAGE/mainpage.html");
     });
 
     // A gomb hozzáadása a waitingDiv-hez
     waitingDiv.appendChild(backButton);
+    waitingDiv.style.display = 'block';
 
-    // A waitingDiv láthatóvá tétele
-    waitingDiv.style.display = 'block'; // Mutassuk a div-et az üzenettel és gombbal
+    // A státusz frissítése
+    updateStatus("<h2>Játék vége</h2>");
 
-    // A státusz frissítése (opcionális, ha a statusDiv különálló)
-    updateStatus("<h2>Meccs véget ért</h2>");
-
-    // A játéktáblák letiltása (ez már a kódban volt, megtartjuk)
+    // A játéktáblák letiltása
     disableBoard(placementBoard);
     disableBoard(shootingBoard);
-
-    // A régi alert és timeout eltávolítva
-    // // setTimeout(() => {
-    // //     alert(message.message); // ELTÁVOLÍTVA
-    // //     navigateTo("../MAINPAGE/mainpage.html"); // ELTÁVOLÍTVA
-    // // }, 1500);
-
-    // A showWaitingMessage(false) hívás eltávolítva, mert most mutatni akarjuk a div-et
-    // showWaitingMessage(false); // ELTÁVOLÍTVA
 }
 
 function updateStatus(message) {
