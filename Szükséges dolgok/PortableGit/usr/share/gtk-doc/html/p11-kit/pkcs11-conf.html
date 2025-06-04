@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE html PUBLIC "-
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -11,7 +11,7 @@
 <meta name="generator" content="GTK-Doc V1.34.0 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
-<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<body bgcolor="white" text="black" link="
 <table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
 <td width="100%" align="left" class="shortcuts"></td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
@@ -24,14 +24,14 @@
 <div class="refnamediv"><table width="100%"><tr>
 <td valign="top">
 <h2><span class="refentrytitle">pkcs11.conf</span></h2>
-<p>pkcs11.conf — Configuration files for PKCS#11 modules</p>
+<p>pkcs11.conf — Configuration files for PKCS
 </td>
 <td class="gallery_image" valign="top" align="right"></td>
 </tr></table></div>
 <div class="refsect1">
 <a name="pkcs11-conf-description"></a><h2>Description</h2>
 <p>The <span class="command"><strong>pkcs11.conf</strong></span> configuration files are a standard
-	way to configure PKCS#11 modules.</p>
+	way to configure PKCS
 </div>
 <div class="refsect1">
 <a name="config-format"></a><h2>File format</h2>
@@ -48,14 +48,12 @@
 	from it by a <code class="literal">:</code> (colon). White space between the
 	name and value is ignored.</p>
 <p>Blank lines are ignored. White space at the beginning or end of
-	lines is stripped. Lines that begin with a <code class="literal">#</code> character
+	lines is stripped. Lines that begin with a <code class="literal">
 	are ignored as comments. Comments are not recognized when they come after
 	a value on a line.</p>
 <p>A fictitious module configuration file might look like:</p>
 <pre class="programlisting">
 module: module.so
-# Here is a comment
-
 managed: true
 setting.2: A long value with text.
 x-custom : text
@@ -63,12 +61,12 @@ x-custom : text
 </div>
 <div class="refsect1">
 <a name="config-module"></a><h2>Module Configuration</h2>
-<p>Each configured PKCS#11 module has its own config file. These files
-	can be <a class="link" href="pkcs11-conf.html#config-locations" title="Configuration Files">placed in various locations</a>.</p>
+<p>Each configured PKCS
+	can be <a class="link" href="pkcs11-conf.html
 <p>The filename of the configuration file may consist of upper and lowercase letters
 	underscore, comma, dash and dots. The first characters needs to be an alphanumeric,
 	the filename should end with a <code class="literal">.module</code> extension.</p>
-<p>Most importantly each config file specifies the path of the PKCS#11 module to
+<p>Most importantly each config file specifies the path of the PKCS
 	load. A module config file has the following fields:</p>
 <div class="variablelist"><table border="0" class="variablelist">
 <colgroup>
@@ -79,13 +77,13 @@ x-custom : text
 <tr>
 <td><p><span class="term"><code class="option">module:</code></span></p></td>
 <td>
-<p>The filename of the PKCS#11 module to load.
+<p>The filename of the PKCS
 			This should include an extension like <code class="literal">.so</code></p>
 <p>If this value is blank, then the module will be ignored.
 			This can be used in the user configs to override loading of a module
 			specified in the system configuration.</p>
 <p>If this is a relative path, then the module will be loaded
-			from the <a class="link" href="devel-paths.html#devel-paths-modules" title="Default path for modules with relative paths">default module directory</a>.</p>
+			from the <a class="link" href="devel-paths.html
 </td>
 </tr>
 <tr>
@@ -106,7 +104,7 @@ x-custom : text
 			for other programs using p11-kit. The base name of the process executable
 			should be used here, for example
 			<code class="literal">seahorse, ssh</code>.</p>
-<p>This option can also be used to control whether the module will be loaded by <a class="link" href="sharing.html" title="Sharing PKCS#11 modules">the proxy module</a>.  To enable loading only from the proxy module, specify <code class="literal">p11-kit-proxy</code> as the value.</p>
+<p>This option can also be used to control whether the module will be loaded by <a class="link" href="sharing.html" title="Sharing PKCS
 <p>This is not a security feature. The argument is optional. If
 			not present, then any process will load the module.</p>
 </td>
@@ -119,7 +117,7 @@ x-custom : text
 			other programs using p11-kit. The base name of the process
 			executable should be used here, for example
 			<code class="literal">firefox, thunderbird-bin</code>.</p>
-<p>This option can also be used to control whether the module will be loaded by <a class="link" href="sharing.html" title="Sharing PKCS#11 modules">the proxy module</a>.  To disable loading from the proxy module, specify <code class="literal">p11-kit-proxy</code> as the value.</p>
+<p>This option can also be used to control whether the module will be loaded by <a class="link" href="sharing.html" title="Sharing PKCS
 <p>This is not a security feature. The argument is optional. If
 			not present, then any process will load the module.</p>
 </td>
@@ -129,7 +127,7 @@ x-custom : text
 <td>
 <p>Set to <code class="literal">no</code> if the module is not to be managed by
 			p11-kit. Making a module unmanaged is not recommended, and will cause
-			problems if multiple callers in a single process share a PKCS#11 module.</p>
+			problems if multiple callers in a single process share a PKCS
 <p>This argument is optional and defaults to <code class="literal">yes</code>.</p>
 </td>
 </tr>
@@ -149,7 +147,7 @@ x-custom : text
 <tr>
 <td><p><a name="option-remote"></a><span class="term"><code class="option">remote:</code></span></p></td>
 <td>
-<p>Instead of loading the PKCS#11 module locally, run the module
+<p>Instead of loading the PKCS
 			remotely.</p>
 <p>Specify a command to run, prefixed with <code class="literal">|</code> a pipe.
 			The command must speak the p11-kit remoting protocol on its standard in
@@ -184,7 +182,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 <div class="refsect1">
 <a name="config-global"></a><h2>Global Configuration</h2>
 <p>A global configuration may also be present. This file contains settings
-	that are not related to a single PKCS#11 module. The location(s) of the
+	that are not related to a single PKCS
 	global configuration are described below. The global configuration file
 	can contain the following fields:</p>
 <div class="variablelist"><table border="0" class="variablelist">
@@ -207,7 +205,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 			setting in a global configuration file will override the
 			<code class="literal">managed</code> setting in the individual module configuration
 			files. Making modules unmanaged is not recommended, and will cause
-			problems if multiple callers in a single process share a PKCS#11
+			problems if multiple callers in a single process share a PKCS
 			module.</p>
 <p>This argument is optional.</p>
 </td>
@@ -229,7 +227,7 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 </div>
 <div class="refsect1">
 <a name="config-locations"></a><h2>Configuration Files</h2>
-<p>Each configured PKCS#11 module has its own config file. These
+<p>Each configured PKCS
 	files are placed in a directory. In addition a global config file exists.
 	There is a system configuration consisting of the various module config
 	files and a file for global configuration. Optionally each user can provide
@@ -246,13 +244,13 @@ remote: |ssh user@remote p11-kit remote /path/to/module.so
 	directory if running inside a setuid or setgid program.</p>
 <p>The default system config file and module directory can be changed
 	when building p11-kit. Always
-	<a class="link" href="devel-paths.html" title="Packaging PKCS#11 module configs">lookup these paths</a> using
+	<a class="link" href="devel-paths.html" title="Packaging PKCS
 	<code class="literal">pkg-config</code>.</p>
 </div>
 <div class="refsect1">
 <a name="pkcs11-conf-see-also"></a><h2>See also</h2>
 <span class="simplelist"><span class="citerefentry"><span class="refentrytitle">p11-kit</span>(8)</span></span><p>Further details available in the p11-kit online documentation at
-	<a class="ulink" href="https://p11-glue.github.io/p11-glue/p11-kit/manual/" target="_top">https://p11-glue.github.io/p11-glue/p11-kit/manual/</a>.
+	<a class="ulink" href="https:
 	</p>
 </div>
 </div>

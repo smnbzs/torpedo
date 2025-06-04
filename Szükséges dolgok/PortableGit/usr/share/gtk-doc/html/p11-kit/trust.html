@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE html PUBLIC "-
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -11,7 +11,7 @@
 <meta name="generator" content="GTK-Doc V1.34.0 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
-<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<body bgcolor="white" text="black" link="
 <table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
 <td width="100%" align="left" class="shortcuts"></td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
@@ -71,7 +71,7 @@
 $ trust list
 </pre>
 <p>List information about the various items in the trust policy store.
-	Each item is listed with it's PKCS#11 URI and some descriptive information.</p>
+	Each item is listed with it's PKCS
 <p>You can specify the following options to control what to list.</p>
 <dt><span class="term"><code class="option">--filter=&lt;what&gt;</code></span></dt>
 <dd>
@@ -101,7 +101,7 @@ $ trust list
 </tr>
 <tr>
 <td><p><span class="term"><code class="option">pkcs11:object=xx</code></span></p></td>
-<td><p>A PKCS#11 URI to filter with</p></td>
+<td><p>A PKCS
 </tr>
 </tbody>
 </table></div>
@@ -168,7 +168,7 @@ $ trust anchor --remove "pkcs11:id=%AA%BB%CC%DD%EE;type=cert"
 	command line. These are stored as anchors, unless they are already
 	present.</p>
 <p>When removing an anchor, either specify certificate files or
-	PKCS#11 URI's on the command line. Matching anchors will be removed.</p>
+	PKCS
 <p>It may be that this command needs to be run as root in order to
 	modify the system trust policy store, if no user specific store is
 	available.</p>
@@ -182,7 +182,7 @@ $ trust anchor --remove "pkcs11:id=%AA%BB%CC%DD%EE;type=cert"
 <tr>
 <td><p><span class="term"><code class="option">--remove</code></span></p></td>
 <td><p>Remove one or more anchors from the trust
-			policy store. Specify certificate files or PKCS#11 URI's
+			policy store. Specify certificate files or PKCS
 			on the command line.</p></td>
 </tr>
 <tr>
@@ -244,7 +244,7 @@ $ trust extract --format=x509-directory --filter=ca-anchors /path/to/directory
 </tr>
 <tr>
 <td><p><span class="term"><code class="option">pkcs11:object=xx</code></span></p></td>
-<td><p>A PKCS#11 URI</p></td>
+<td><p>A PKCS
 </tr>
 </tbody>
 </table></div>
@@ -369,12 +369,12 @@ $ trust extract-compat
 </div>
 <div class="refsect1">
 <a name="trust-dump"></a><h2>Dump</h2>
-<p>Dump PKCS#11 items in the various tokens.</p>
+<p>Dump PKCS
 <pre class="programlisting">
 $ trust dump
 </pre>
-<p>Dump information about the various PKCS#11 items in the tokens.
-	Each item is dumped with it's PKCS#11 URI and information in the .p11-kit
+<p>Dump information about the various PKCS
+	Each item is dumped with it's PKCS
 	persistence format.</p>
 <p>You can specify the following options to control what to dump.</p>
 <dt><span class="term"><code class="option">--filter=&lt;what&gt;</code></span></dt>
@@ -393,7 +393,7 @@ $ trust dump
 </tr>
 <tr>
 <td><p><span class="term"><code class="option">pkcs11:object=xx</code></span></p></td>
-<td><p>A PKCS#11 URI to filter with</p></td>
+<td><p>A PKCS
 </tr>
 </tbody>
 </table></div>
@@ -421,16 +421,16 @@ $ trust check-format /path/to/file.p11-kit...
 <p>
     Please send bug reports to either the distribution bug tracker
     or the upstream bug tracker at
-    <a class="ulink" href="https://github.com/p11-glue/p11-kit/issues/" target="_top">https://github.com/p11-glue/p11-kit/issues/</a>.
+    <a class="ulink" href="https:
   </p>
 </div>
 <div class="refsect1">
 <a name="trust-see-also"></a><h2>See also</h2>
 <span class="simplelist"><span class="citerefentry"><span class="refentrytitle">p11-kit</span>(8)</span></span><p>An explanatory document about storing trust policy:
-    <a class="ulink" href="https://p11-glue.github.io/p11-glue/doc/storing-trust-policy/" target="_top">https://p11-glue.github.io/p11-glue/doc/storing-trust-policy/</a></p>
+    <a class="ulink" href="https:
 <p>
     Further details available in the p11-kit online documentation at
-    <a class="ulink" href="https://p11-glue.github.io/p11-glue/p11-kit/manual/" target="_top">https://p11-glue.github.io/p11-glue/p11-kit/manual/</a>.
+    <a class="ulink" href="https:
   </p>
 </div>
 </div>

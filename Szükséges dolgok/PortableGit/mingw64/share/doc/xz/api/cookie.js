@@ -1,11 +1,5 @@
-/*!
- Cookie helper functions
- Copyright (c) 2023 Dimitri van Heesch
- Released under MIT license.
-*/
 let Cookie = {
   cookie_namespace: 'doxygen_',
-
   readSetting(cookie,defVal) {
     if (window.chrome) {
       const val = localStorage.getItem(this.cookie_namespace+cookie) ||
@@ -27,8 +21,7 @@ let Cookie = {
     }
     return defVal;
   },
-
-  writeSetting(cookie,val,days=10*365) { // default days='forever', 0=session cookie, -1=delete
+  writeSetting(cookie,val,days=10*365) {
     if (window.chrome) {
       if (days==0) {
         sessionStorage.setItem(this.cookie_namespace+cookie,val);
@@ -43,7 +36,6 @@ let Cookie = {
                         val + "; SameSite=Lax;" + expiration + "path=/";
     }
   },
-
   eraseSetting(cookie) {
     if (window.chrome) {
       if (localStorage.getItem(this.cookie_namespace+cookie)) {

@@ -1,8 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE html PUBLIC "-
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Packaging PKCS#11 module configs: p11-kit</title>
+<title>Packaging PKCS
 <meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
 <link rel="home" href="index.html" title="p11-kit">
 <link rel="up" href="devel.html" title="Building, Packaging, and Contributing to p11-kit">
@@ -11,7 +11,7 @@
 <meta name="generator" content="GTK-Doc V1.34.0 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
-<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<body bgcolor="white" text="black" link="
 <table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
 <td width="100%" align="left" class="shortcuts"></td>
 <td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
@@ -21,8 +21,8 @@
 </tr></table>
 <div class="section">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
-<a name="devel-paths"></a>Packaging PKCS#11 module configs</h2></div></div></div>
-<p>Developers or packagers of PKCS#11 modules need to install various
+<a name="devel-paths"></a>Packaging PKCS
+<p>Developers or packagers of PKCS
 		files into specific locations so that p11-kit will recognize and load the
 		module correctly.</p>
 <p>You should use <code class="literal">pkg-config</code> as described below
@@ -33,8 +33,8 @@
 <div class="section">
 <div class="titlepage"><div><div><h3 class="title">
 <a name="devel-paths-config"></a>Path to place module configuration</h3></div></div></div>
-<p>As described in the <a class="link" href="pkcs11-conf.html#config-module" title="Module Configuration">module configuration</a>
-			documentation, each PKCS#11 module should install a config file describing
+<p>As described in the <a class="link" href="pkcs11-conf.html
+			documentation, each PKCS
 			that module. These config files should be installed to a specific directory which
 			can be determined by running:</p>
 <pre class="programlisting">
@@ -44,7 +44,7 @@ $ <span class="command"><strong>pkg-config p11-kit-1 --variable p11_module_confi
 <div class="section">
 <div class="titlepage"><div><div><h3 class="title">
 <a name="devel-paths-modules"></a>Default path for modules with relative paths</h3></div></div></div>
-<p>If a <a class="link" href="pkcs11-conf.html#config-module" title="Module Configuration">module configuration</a>
+<p>If a <a class="link" href="pkcs11-conf.html
 			contains a relative path in its <code class="literal">module:</code> setting,
 			then that module will be loaded from the default module path. This
 			path can be determined by running:</p>
