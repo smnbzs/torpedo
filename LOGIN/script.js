@@ -1,5 +1,6 @@
-import { initializeApp } from "https:
-import { getAuth, signInWithEmailAndPassword } from "https:
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+
 var firebaseConfig = {
     apiKey: "AIzaSyAH2TNOIpLbbwo36_qYIbEfoYSjVNCtDFI",
     authDomain: "torpedo-67879.firebaseapp.com",
@@ -9,13 +10,17 @@ var firebaseConfig = {
     appId: "1:654110680192:web:9b76d73b5e88c38ea2f265",
     measurementId: "G-K608XGYTK7"
 };
+
 var app = initializeApp(firebaseConfig);
+
 const submit = document.getElementById("submit");
+
 submit.addEventListener("click", function(event) {
     event.preventDefault();
     var email = document.getElementById("email").value;
     var password = document.getElementById("password").value;
-    fetch("http:
+
+    fetch("http://localhost/torpedo/api/isActive.php", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -34,14 +39,18 @@ submit.addEventListener("click", function(event) {
         else
         {
             const auth = getAuth();
+
     signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
             const user = userCredential.user;
             const firebaseUID = user.uid;
+
             document.cookie = `userUID=${firebaseUID}; path=/; max-age=3600;Secure; SameSite=Strict`;  
             document.cookie = `userEmail=${email}; path=/; max-age=3600;Secure; SameSite=Strict`;  
+
             alert("You have successfully logged in.");
-            fetch("http:
+
+            fetch("http://localhost/torpedo/api/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -72,4 +81,5 @@ submit.addEventListener("click", function(event) {
         });
         }
     });
+    
 });

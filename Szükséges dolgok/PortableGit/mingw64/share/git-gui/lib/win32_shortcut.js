@@ -1,3 +1,6 @@
+// git-gui Windows shortcut support
+// Copyright (C) 2007 Shawn Pearce
+
 var WshShell = WScript.CreateObject("WScript.Shell");
 var argv = WScript.Arguments;
 var argi = 0;
@@ -18,6 +21,7 @@ while (argi < argv.length) {
 		lnk_args += s;
 	}
 }
+
 var lnk = WshShell.CreateShortcut(lnk_path);
 if (argv.length == 1) {
 	WScript.echo(lnk.TargetPath);

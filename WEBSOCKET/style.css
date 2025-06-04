@@ -1,74 +1,93 @@
+/* Alapbeállítások */
 body {
     font-family: 'Arial', sans-serif;
-    background-color:
-    color:
+    background-color: #1a1a1a;
+    color: #fff;
     margin: 0;
     padding: 20px;
 }
+
 h1 {
     text-align: center;
     margin-bottom: 30px;
 }
+
+/* Játéktábla konténerek */
 .game-container {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
     margin-bottom: 30px;
 }
+
 .board-container {
     margin: 10px;
 }
+
 h2 {
     margin-bottom: 10px;
-    color:
+    color: #ddd;
 }
+
+/* Játéktáblák */
+#placementBoard, #shootingBoard {
     display: grid;
     grid-template-columns: repeat(10, 30px);
     grid-template-rows: repeat(10, 30px);
     gap: 2px;
     margin-bottom: 20px;
 }
+
 .cell {
     width: 30px;
     height: 30px;
-    background-color:
-    border: 1px solid
+    background-color: #333;
+    border: 1px solid #555;
     cursor: pointer;
     transition: all 0.2s ease;
 }
+
 .cell:hover:not(.disabled) {
-    background-color:
+    background-color: #444;
 }
+
 .cell.disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
+
 .cell.ship {
-    background-color:
+    background-color: #2a7d2a;
 }
+
 .cell.hit {
-    background-color:
+    background-color: #a52a2a;
     position: relative;
 }
+
 .cell.hit::before, .cell.hit::after {
     content: '';
     position: absolute;
     width: 80%;
     height: 2px;
-    background-color:
+    background-color: #fff;
     top: 50%;
     left: 10%;
 }
+
 .cell.hit::before {
     transform: rotate(45deg);
 }
+
 .cell.hit::after {
     transform: rotate(-45deg);
 }
+
 .cell.miss {
-    background-color:
+    background-color: #1e3a8a;
     position: relative;
 }
+
 .cell.miss::after {
     content: '•';
     position: absolute;
@@ -76,20 +95,24 @@ h2 {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color:
+    color: #fff;
 }
+
+/* Státusz és gombok */
+#status {
     text-align: center;
     margin: 20px 0;
     padding: 10px;
-    background-color:
+    background-color: #333;
     border-radius: 5px;
     min-height: 30px;
 }
+
 button {
     display: block;
     margin: 0 auto;
     padding: 10px 20px;
-    background-color:
+    background-color: #2a7d2a;
     color: white;
     border: none;
     border-radius: 5px;
@@ -97,14 +120,18 @@ button {
     font-size: 16px;
     transition: background-color 0.3s;
 }
+
 button:hover:not(:disabled) {
-    background-color:
+    background-color: #3a8a3a;
 }
+
 button:disabled {
-    background-color:
+    background-color: #555;
     cursor: not-allowed;
     opacity: 0.7;
 }
+
+/* Várakozó üzenet */
 .waiting-message {
     position: fixed;
     top: 0;
@@ -120,10 +147,12 @@ button:disabled {
     color: white;
     text-align: center;
 }
+
 .waiting-message h3 {
     font-size: 32px;
     margin-bottom: 10px;
 }
+
 .waiting-message .timer {
     font-size: 24px;
     font-weight: bold;

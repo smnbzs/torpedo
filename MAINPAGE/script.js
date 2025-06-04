@@ -3,13 +3,16 @@ function getCookie(name) {
     if (match) return match[2];
     return null;
 }
+
 function deleteCookie(name) {
     document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 }
+
 function logoutUser() {
     var userUID = getCookie("userUID");
+
     if (userUID) { 
-        fetch("http:
+        fetch("http://localhost/torpedo/api/logout.php", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -37,9 +40,11 @@ function logoutUser() {
         console.error("User UID not found in cookies");
     }
 }
+
 window.addEventListener("load", function() {
     var userUID = getCookie("userUID");
     var userEmail = getCookie("userEmail");
+
     if (userUID && userEmail) {
         var loginTime = getCookie("loginTime");
         if (loginTime) {
@@ -54,7 +59,9 @@ window.addEventListener("load", function() {
         alert("Firstly, you must log in.");
         window.location.href = "../login/login.html";
     }
+
     username();
+
     const logoutButton = document.getElementById("logout");
     if (logoutButton) {
         logoutButton.addEventListener("click", function() {
@@ -62,10 +69,12 @@ window.addEventListener("load", function() {
         });
     }
 });
+
 function username() {
     var userUID = getCookie("userUID");
     if (!userUID) return;
-    fetch("http:
+
+    fetch("http://localhost/torpedo/api/getusername", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -77,6 +86,7 @@ function username() {
     .then(response => response.json())
     .then(data => {
         if (data.status == "success") {
+           
         } else {
             console.error("Error:", data.message);
         }
@@ -85,7 +95,7 @@ function username() {
 }
 function numberofplayers()
 {
-    fetch("http:
+    fetch("http://localhost/torpedo/api/countplayers")
     .then(response => response.json())
     .then(data => {
         var cap = document.getElementById("cap");

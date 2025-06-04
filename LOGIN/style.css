@@ -1,4 +1,4 @@
-@import url('https:
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
 body
 {
     background-image: url("../img/3840x2160-uhd-4k-desktop-uc88j9mya6pyagua.jpg");
@@ -22,6 +22,7 @@ body
 h2
 {
     margin-top: 10%;
+    
 }
 .loginhr
 {

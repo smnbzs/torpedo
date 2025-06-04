@@ -1,16 +1,22 @@
-<!DOCTYPE html PUBLIC "-
-    "http:
-<html xmlns="http:
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.5.2" />
-<title>SSH Proxy Command&
+<title>SSH Proxy Command&#8201;&#8212;&#8201;connect.c</title>
 <style type="text/css">
+/* Debug borders */
 p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
+/*
+  border: 1px solid red;
+*/
 }
+
 body {
   margin: 1em 5% 1em 5%;
 }
+
 a {
   color: blue;
   text-decoration: underline;
@@ -18,24 +24,29 @@ a {
 a:visited {
   color: fuchsia;
 }
+
 em {
   font-style: italic;
   color: navy;
 }
+
 strong {
   font-weight: bold;
-  color:
+  color: #083194;
 }
+
 tt {
   color: navy;
 }
+
 h1, h2, h3, h4, h5, h6 {
-  color:
+  color: #527bbd;
   font-family: sans-serif;
   margin-top: 1.2em;
   margin-bottom: 0.5em;
   line-height: 1.3;
 }
+
 h1, h2, h3 {
   border-bottom: 2px solid silver;
 }
@@ -48,51 +59,59 @@ h3 {
 h3 + * {
   clear: left;
 }
+
 div.sectionbody {
   font-family: serif;
   margin-left: 0;
 }
+
 hr {
   border: 1px solid silver;
 }
+
 p {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
+
 ul, ol, li > p {
   margin-top: 0;
 }
+
 pre {
   padding: 0;
   margin: 0;
 }
-span
-  color:
+
+span#author {
+  color: #527bbd;
   font-family: sans-serif;
   font-weight: bold;
   font-size: 1.1em;
 }
-span
+span#email {
 }
-span
+span#revnumber, span#revdate, span#revremark {
   font-family: sans-serif;
 }
-div
+
+div#footer {
   font-family: sans-serif;
   font-size: small;
   border-top: 2px solid silver;
   padding-top: 0.5em;
   margin-top: 4.0em;
 }
-div
+div#footer-text {
   float: left;
   padding-bottom: 0.5em;
 }
-div
+div#footer-badges {
   float: right;
   padding-bottom: 0.5em;
 }
-div
+
+div#preamble {
   margin-top: 1.5em;
   margin-bottom: 1.5em;
 }
@@ -106,13 +125,16 @@ div.admonitionblock {
   margin-top: 2.0em;
   margin-bottom: 2.0em;
   margin-right: 10%;
-  color:
+  color: #606060;
 }
-div.content { 
+
+div.content { /* Block element content. */
   padding: 0;
 }
+
+/* Block element titles. */
 div.title, caption.title {
-  color:
+  color: #527bbd;
   font-family: sans-serif;
   font-weight: bold;
   text-align: left;
@@ -122,6 +144,7 @@ div.title, caption.title {
 div.title + * {
   margin-top: 0;
 }
+
 td div.title:first-child {
   margin-top: 0.0em;
 }
@@ -131,27 +154,32 @@ div.content div.title:first-child {
 div.content + div.title {
   margin-top: 0.0em;
 }
+
 div.sidebarblock > div.content {
-  background:
+  background: #ffffee;
   border: 1px solid silver;
   padding: 0.5em;
 }
+
 div.listingblock > div.content {
   border: 1px solid silver;
-  background:
+  background: #f4f4f4;
   padding: 0.5em;
 }
+
 div.quoteblock, div.verseblock {
   padding-left: 1.0em;
   margin-left: 1.0em;
   margin-right: 10%;
-  border-left: 5px solid
-  color:
+  border-left: 5px solid #dddddd;
+  color: #777777;
 }
+
 div.quoteblock > div.attribution {
   padding-top: 0.5em;
   text-align: right;
 }
+
 div.verseblock > div.content {
   white-space: pre;
 }
@@ -159,28 +187,33 @@ div.verseblock > div.attribution {
   padding-top: 0.75em;
   text-align: left;
 }
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
 div.verseblock + div.attribution {
   text-align: left;
 }
+
 div.admonitionblock .icon {
   vertical-align: top;
   font-size: 1.1em;
   font-weight: bold;
   text-decoration: underline;
-  color:
+  color: #527bbd;
   padding-right: 0.5em;
 }
 div.admonitionblock td.content {
   padding-left: 0.5em;
-  border-left: 3px solid
+  border-left: 3px solid #dddddd;
 }
+
 div.exampleblock > div.content {
-  border-left: 3px solid
+  border-left: 3px solid #dddddd;
   padding-left: 0.5em;
 }
+
 div.imageblock div.content { padding-left: 0; }
 span.image img { border-style: none; }
 a.image:visited { color: white; }
+
 dl {
   margin-top: 0.8em;
   margin-bottom: 0.8em;
@@ -194,6 +227,7 @@ dt {
 dd > *:first-child {
   margin-top: 0.1em;
 }
+
 ul, ol {
     list-style-position: outside;
 }
@@ -212,14 +246,16 @@ ol.lowerroman {
 ol.upperroman {
   list-style-type: upper-roman;
 }
+
 div.compact ul, div.compact ol,
 div.compact p, div.compact p,
 div.compact div, div.compact div {
   margin-top: 0.1em;
   margin-bottom: 0.1em;
 }
+
 div.tableblock > table {
-  border: 3px solid
+  border: 3px solid #527bbd;
 }
 thead, p.table.header {
   font-family: sans-serif;
@@ -234,6 +270,7 @@ td > div.verse {
 p.table {
   margin-top: 0;
 }
+/* Because the table frame attribute is overriden by CSS in most browsers. */
 div.tableblock > table[frame="void"] {
   border-style: none;
 }
@@ -245,6 +282,8 @@ div.tableblock > table[frame="vsides"] {
   border-top-style: none;
   border-bottom-style: none;
 }
+
+
 div.hdlist {
   margin-top: 0.8em;
   margin-bottom: 0.8em;
@@ -268,20 +307,29 @@ div.hdlist.compact tr {
   margin: 0;
   padding-bottom: 0;
 }
+
 .comment {
   background: yellow;
 }
+
 .footnote, .footnoteref {
   font-size: 0.8em;
 }
+
 span.footnote, span.footnoteref {
   vertical-align: super;
 }
+
+#footnotes {
   margin: 20px 0 20px 0;
   padding: 7px 0 0 0;
 }
+
+#footnotes div.footnote {
   margin: 0 0 5px 0;
 }
+
+#footnotes hr {
   border: none;
   border-top: 1px solid silver;
   height: 1px;
@@ -290,20 +338,25 @@ span.footnote, span.footnoteref {
   width: 20%;
   min-width: 100px;
 }
+
+
 @media print {
-  div
+  div#footer-badges { display: none; }
 }
-div
+
+div#toc {
   margin-bottom: 2.5em;
 }
-div
-  color:
+
+div#toctitle {
+  color: #527bbd;
   font-family: sans-serif;
   font-size: 1.1em;
   font-weight: bold;
   margin-top: 1.0em;
   margin-bottom: 0.1em;
 }
+
 div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
   margin-top: 0;
   margin-bottom: 0;
@@ -320,27 +373,32 @@ div.toclevel4 {
   margin-left: 6em;
   font-size: 0.9em;
 }
+/* Workarounds for IE6's broken and incomplete CSS2. */
+
 div.sidebar-content {
-  background:
+  background: #ffffee;
   border: 1px solid silver;
   padding: 0.5em;
 }
 div.sidebar-title, div.image-title {
-  color:
+  color: #527bbd;
   font-family: sans-serif;
   font-weight: bold;
   margin-top: 0.0em;
   margin-bottom: 0.5em;
 }
+
 div.listingblock div.content {
   border: 1px solid silver;
-  background:
+  background: #f4f4f4;
   padding: 0.5em;
 }
+
 div.quoteblock-attribution {
   padding-top: 0.5em;
   text-align: right;
 }
+
 div.verseblock-content {
   white-space: pre;
 }
@@ -348,37 +406,66 @@ div.verseblock-attribution {
   padding-top: 0.75em;
   text-align: left;
 }
+
 div.exampleblock-content {
-  border-left: 3px solid
+  border-left: 3px solid #dddddd;
   padding-left: 0.5em;
 }
-div
+
+/* IE6 sets dynamically generated links as visited. */
+div#toc a:visited { color: blue; }
 </style>
 <script type="text/javascript">
+/*<![CDATA[*/
 window.onload = function(){asciidoc.footnotes();}
-var asciidoc = {
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
 toc: function (toclevels) {
+
   function getText(el) {
     var text = "";
     for (var i = el.firstChild; i != null; i = i.nextSibling) {
-      if (i.nodeType == 3 )
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
         text += i.data;
       else if (i.firstChild != null)
         text += getText(i);
     }
     return text;
   }
+
   function TocEntry(el, text, toclevel) {
     this.element = el;
     this.text = text;
     this.toclevel = toclevel;
   }
+
   function tocEntries(el, toclevels) {
     var result = new Array;
     var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
     var iterate = function (el) {
       for (var i = el.firstChild; i != null; i = i.nextSibling) {
-        if (i.nodeType == 1 ) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
           var mo = re.exec(i.tagName);
           if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
             result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
@@ -390,6 +477,7 @@ toc: function (toclevels) {
     iterate(el);
     return result;
   }
+
   var toc = document.getElementById("toc");
   var entries = tocEntries(document.getElementById("content"), toclevels);
   for (var i = 0; i < entries.length; ++i) {
@@ -397,7 +485,7 @@ toc: function (toclevels) {
     if (entry.element.id == "")
       entry.element.id = "_toc_" + i;
     var a = document.createElement("a");
-    a.href = "
+    a.href = "#" + entry.element.id;
     a.appendChild(document.createTextNode(entry.text));
     var div = document.createElement("div");
     div.appendChild(a);
@@ -407,6 +495,16 @@ toc: function (toclevels) {
   if (entries.length == 0)
     toc.parentNode.removeChild(toc);
 },
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
 footnotes: function () {
   var cont = document.getElementById("content");
   var noteholder = document.getElementById("footnotes");
@@ -416,39 +514,44 @@ footnotes: function () {
   for (i=0; i<spans.length; i++) {
     if (spans[i].className == "footnote") {
       n++;
+      // Use [\s\S] in place of . so multi-line matches work.
+      // Because JavaScript has no s (dotall) regex flag.
       note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
       noteholder.innerHTML +=
         "<div class='footnote' id='_footnote_" + n + "'>" +
-        "<a href='
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
         n + "</a>. " + note + "</div>";
       spans[i].innerHTML =
-        "[<a id='_footnoteref_" + n + "' href='
+        "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
         "' title='View footnote' class='footnote'>" + n + "</a>]";
       var id =spans[i].getAttribute("id");
-      if (id != null) refs["
+      if (id != null) refs["#"+id] = n;
     }
   }
   if (n == 0)
     noteholder.parentNode.removeChild(noteholder);
   else {
+    // Process footnoterefs.
     for (i=0; i<spans.length; i++) {
       if (spans[i].className == "footnoteref") {
         var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
-        href = href.match(/
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
         n = refs[href];
         spans[i].innerHTML =
-          "[<a href='
+          "[<a href='#_footnote_" + n +
           "' title='View footnote' class='footnote'>" + n + "</a>]";
       }
     }
   }
 }
+
 }
+/*]]>*/
 </script>
 </head>
 <body>
 <div id="header">
-<h1>SSH Proxy Command&
+<h1>SSH Proxy Command&#8201;&#8212;&#8201;connect.c</h1>
 </div>
 <div id="content">
 <div id="preamble">
@@ -496,10 +599,10 @@ You can also relay local socket stream instead of standard I/O.
 </li>
 </ul></div>
 <div class="paragraph"><p>You can download source code
-(<a href="http:
-on the <a href="http:
+(<a href="http://bitbucket.org/gotoh/connect/raw/tip/connect.c">connect.c</a>)
+on the <a href="http://bitbucket.org/gotoh/connect/">project page</a>.</p></div>
 <div class="paragraph"><p>Pre-compiled binary for MS Windows is also available on
-<a href="http:
+<a href="http://bitbucket.org/gotoh/connect/downloads/">download page</a>.</p></div>
 </div>
 </div>
 <h2 id="_what_is_proxy_command">What is proxy command?</h2>
@@ -520,7 +623,7 @@ proxying code into external command.</p></div>
 <h2 id="_how_to_use">How to Use</h2>
 <div class="sectionbody">
 <h3 id="_get_source">Get Source</h3><div style="clear:left"></div>
-<div class="paragraph"><p>You can get source code from <a href="http:
+<div class="paragraph"><p>You can get source code from <a href="http://bitbucket.org/gotoh/connect/downloads/">project download page</a>.
 Pre-compiled MS Windows binary is also available there.</p></div>
 <h3 id="_compile_and_install">Compile and Install</h3><div style="clear:left"></div>
 <div class="paragraph"><p>In most environment, you can compile <tt>connect.c</tt> simply. On UNIX
@@ -606,9 +709,11 @@ hostname and port specified to SSH command.</p></div>
 may help you.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>
+<pre><tt>## Outside of the firewall, use connect command with SOCKS conenction.
 Host *
   ProxyCommand connect -S socks.local.net %h %p
+
+## Inside of the firewall, use connect command with direct connection.
 Host *.local.net
   ProxyCommand connect %h %p</tt></pre>
 </div></div>
@@ -616,9 +721,11 @@ Host *.local.net
 in examle above, like this:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>
+<pre><tt>## Outside of the firewall, with HTTP proxy
 Host *
   ProxyCommand connect -H proxy.local.net:8080 %h %p
+
+## Inside of the firewall, direct
 Host *.local.net
   ProxyCommand connect %h %p</tt></pre>
 </div></div>
@@ -981,13 +1088,15 @@ is good idea of detecting environment to swich and simple way to
 specify conditioned directive of servers.</p></div>
 <div class="paragraph"><p>One tricky workaround exists. It is replacing <tt>~/.ssh/config</tt> file by
 script on ppp up/down.</p></div>
-<div class="paragraph"><p>There&
+<div class="paragraph"><p>There&#8217;s another example of wrapper script (contributed by Darren
 Tucker). This script costs executing ifconfig and grep to detect
 current environment, but it works.  Note that you should modify
 addresses if you use it.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>
+<pre><tt>#!/bin/sh
+## ~/bin/myconnect --- Proxy server switching wrapper
+
 if ifconfig eth0 |grep "inet addr:192\.168\.1" &gt;/dev/null; then
         opts="-S 192.168.1.1:1080"
 elif ifconfig eth0 |grep "inet addr:10\." &gt;/dev/null; then
@@ -1029,7 +1138,7 @@ can use this command in Emacs to open network connection with remote
 host over the firewall via SOCKS or HTTP proxy without SOCKSifying
 Emacs itself.</p></div>
 <div class="paragraph"><p>There is sample code:
-<a href="http:
+<a href="http://bitbucket.org/gotoh/connect/src/tip/relay.el">http://bitbucket.org/gotoh/connect/src/tip/relay.el</a></p></div>
 <div class="paragraph"><p>With this code, you can use <tt>relay-open-network-stream</tt> function instead
 of <tt>open-network-stream</tt> to make network connection. See top comments of
 the source for more detail.</p></div>
@@ -1073,7 +1182,7 @@ quit
 $</tt></pre>
 </div></div>
 <div class="paragraph"><p>By combinating hopping connection and relay.el, I can read NetNews
-using <a href="http:
+using <a href="http://www.gohome.org/wl/">Wanderlust</a> on Emacs at home.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>                        |
@@ -1085,9 +1194,9 @@ using <a href="http:
  emacs &lt;-------------- ssh ---------------&gt; sshd &lt;-- connect --&gt; nntpd
        &lt;-- connect --&gt; socksd &lt;-- SOCKS --&gt;</tt></pre>
 </div></div>
-<div class="paragraph"><p>As an advanced example, you can use SSH hopping as fetchmail&
+<div class="paragraph"><p>As an advanced example, you can use SSH hopping as fetchmail&#8217;s plug-in
 program to access via secure tunnel. This method requires that connect
-program is insatalled on remote host. There&
+program is insatalled on remote host. There&#8217;s example of .fetchmailrc
 bellow. When fetchmail access to mail-server, you will login to remote
 host using SSH then execute connect program on remote host to relay
 conversation with pop server. Thus fetchmail can retrieve mails in
@@ -1116,14 +1225,16 @@ like this:</p></div>
 <pre><tt>internal$ cat ~/.ssh/config
 Host home
     ProxyCommand connect -H firewall:8080 %h 443
-Host server
+
+Host server # internal
     ProxyCommand ssh home connect %h %p
+
 internal$ ssh home
 You are logged in to home!
-home
+home# exit
 internal$ ssh server
 You are logged in to server!
-server
+server# exit
 internal$</tt></pre>
 </div></div>
 <div class="paragraph"><p>This way is similar to "Hopping connection via SSH" except configuring
@@ -1156,19 +1267,19 @@ out side of the wall.</p></div>
 <div class="sectionbody">
 <h3 id="_difference_between_socks_versions">Difference between SOCKS versions</h3><div style="clear:left"></div>
 <div class="paragraph"><p>SOCKS version 4 is first popular implementation which is documented
-<a href="http:
+<a href="http://www.socks.nec.com/protocol/socks4.protocol">here</a>. Since this
 protocol provide IP address based requesting, client program should
 resolve name of outer host by itself. Version 4a (documented
-<a href="http:
+<a href="http://www.socks.nec.com/protocol/socks4a.protocol">here</a>) is
 enhanced to allow request by hostname instead of IP address.</p></div>
 <div class="paragraph"><p>SOCKS version 5 is re-designed protocol stands on experience of
 version 4 and 4a. There is no compativility with previous
-versions. Instead, there&
+versions. Instead, there&#8217;s some improvement: IPv6 support, request by
 hostname, UDP proxying, etc.</p></div>
 <h3 id="_configuration_to_use_https">Configuration to use HTTPS</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Many http proxy servers implementation supports https CONNECT method
 (SLL). You might add configuration to allow using https. For the
-example of <a href="http:
+example of <a href="http://www.delegate.org/delegate/">DeleGate</a> (DeleGate is a
 multi-purpose application level gateway, or a proxy server) , you
 should add https to REMITTABLE parameter to allow HTTP-Proxy like
 this:</p></div>
@@ -1181,7 +1292,7 @@ and so on.</p></div>
 <h3 id="_socks5_servers">SOCKS5 Servers</h3><div style="clear:left"></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.socks.nec.com/refsoftware.html">NEC SOCKS Reference Implementation</a>
 </dt>
 <dd>
 <p>
@@ -1189,7 +1300,7 @@ and so on.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.inet.no/dante/index.html">Dante</a>
 </dt>
 <dd>
 <p>
@@ -1198,7 +1309,7 @@ and so on.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.delegate.org/delegate/">DeleGate</a>
 </dt>
 <dd>
 <p>
@@ -1212,7 +1323,7 @@ and so on.</p></div>
 <h3 id="_specifications">Specifications</h3><div style="clear:left"></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.socks.nec.com/protocol/socks4.protocol">socks4.protocol.txt</a>
 </dt>
 <dd>
 <p>
@@ -1220,7 +1331,7 @@ and so on.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.socks.nec.com/protocol/socks4a.protocol">socks4a.protocol.txt</a>
 </dt>
 <dd>
 <p>
@@ -1228,7 +1339,7 @@ and so on.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.socks.nec.com/rfc/rfc1928.txt">RFC 1928</a>
 </dt>
 <dd>
 <p>
@@ -1236,7 +1347,7 @@ and so on.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.socks.nec.com/rfc/rfc1929.txt">RFC 1929</a>
 </dt>
 <dd>
 <p>
@@ -1244,15 +1355,15 @@ and so on.</p></div>
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.ietf.org/rfc/rfc2616.txt">RFC 2616</a>
 </dt>
 <dd>
 <p>
-    Hypertext Transfer Protocol&
+    Hypertext Transfer Protocol&#8201;&#8212;&#8201;HTTP/1.1
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.ietf.org/rfc/rfc2617.txt">RFC 2617</a>
 </dt>
 <dd>
 <p>
@@ -1264,24 +1375,24 @@ and so on.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="http:
+<a href="http://www.openssh.org/">OpenSSH Home</a>
 </p>
 </li>
 <li>
 <p>
-<a href="http:
+<a href="http://www.ssh.com/">Proprietary SSH</a>
 </p>
 </li>
 <li>
 <p>
-<a href="http:
+<a href="http://www.taiyo.co.jp/~gotoh/ssh/openssh-socks.html">Using OpenSSH through a SOCKS compatible PROXY on your LAN</a> (J. Grant)
 </p>
 </li>
 </ul></div>
 <h3 id="_similars">Similars</h3><div style="clear:left"></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://proxytunnel.sourceforge.net/">Proxy Tunnel</a>
 </dt>
 <dd>
 <p>
@@ -1289,7 +1400,7 @@ Proxying command using https CONNECT.
 </p>
 </dd>
 <dt class="hdlist1">
-<a href="http:
+<a href="http://www.snurgle.org/~griffon/ssh-https-tunnel">stunnel</a>
 </dt>
 <dd>
 <p>
