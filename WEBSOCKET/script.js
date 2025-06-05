@@ -6,6 +6,14 @@ const waitingDiv = document.createElement('div');
 const BOARD_SIZE = 10;
 const MAX_SHIPS = 10;
 
+const SHIPS = [
+    { name: 'Carrier', size: 5, count: 1 },
+    { name: 'Battleship', size: 4, count: 1 },
+    { name: 'Cruiser', size: 3, count: 1 },
+    { name: 'Submarine', size: 3, count: 1 },
+    { name: 'Destroyer', size: 2, count: 1 }
+];
+
 const userUID = getCookie("userUID");
 if (!userUID) {
     redirectToLogin("Error: UserUID not found. Please log in again!");
@@ -17,6 +25,9 @@ let gameActive = false;
 let waitingForOpponent = true;
 let waitingTimer = 0;
 let timerInterval = null;
+let currentShip = 0;
+let isHorizontal = true;
+let placedShips = [];
 
 waitingDiv.id = 'waitingMessage';
 waitingDiv.classList.add('waiting-message');
@@ -61,49 +72,158 @@ function generateBoard(board, clickHandler, disabled = false) {
 }
 
 function handleCellClick(event) {
-    if (waitingForOpponent || shipsPlaced >= MAX_SHIPS) return;
+    if (waitingForOpponent || currentShip >= SHIPS.length) return;
     if (event.target.classList.contains('disabled')) return;
 
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
+    
+    // Ha már van hajó ezen a pozíción, ne engedjük az újat
+    if (placedShips.some(ship => ship.cells.some(cell => cell.x === x && cell.y === y))) {
+        return;
+    }
 
-    if (!ships.some(ship => ship.x === x && ship.y === y)) {
-        ships.push({ x, y });
-        event.target.classList.add('ship');
-        shipsPlaced++;
-
-        if (shipsPlaced === MAX_SHIPS) {
+    const ship = SHIPS[currentShip];
+    
+    if (canPlaceShip(x, y, ship.size, isHorizontal)) {
+        placeShip(x, y, ship);
+        currentShip++;  // Először növeljük a számlálót
+        
+        if (currentShip === SHIPS.length) {  // Aztán ellenőrizzük
             doneButton.disabled = false;
             updateStatus("All ships placed. Click 'Ready' button!");
+        } else {
+            updateStatus(`Place your ${SHIPS[currentShip].name} (${SHIPS[currentShip].size} cells)`);
         }
     }
 }
 
-function handleShootClick(event) {
-    if (!gameActive || waitingForOpponent) return;
-    if (event.target.classList.contains('disabled')) return;
+function canPlaceShip(x, y, size, horizontal) {
+    // Check boundaries
+    if (horizontal && x + size > BOARD_SIZE) return false;
+    if (!horizontal && y + size > BOARD_SIZE) return false;
+    
+    // Check overlap with other ships
+    for (let i = 0; i < size; i++) {
+        const checkX = horizontal ? x + i : x;
+        const checkY = horizontal ? y : y + i;
+        
+        // Check if any cell is already occupied
+        if (placedShips.some(ship => ship.cells.some(cell => 
+            cell.x === checkX && cell.y === checkY))) {
+            return false;
+        }
+        
+        // Check adjacent cells (diagonal and orthogonal)
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                const adjX = checkX + dx;
+                const adjY = checkY + dy;
+                if (adjX >= 0 && adjX < BOARD_SIZE && adjY >= 0 && adjY < BOARD_SIZE) {
+                    if (placedShips.some(ship => ship.cells.some(cell => 
+                        cell.x === adjX && cell.y === adjY))) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function placeShip(x, y, ship) {
+    const shipCells = [];
+    for (let i = 0; i < ship.size; i++) {
+        const cellX = isHorizontal ? x + i : x;
+        const cellY = isHorizontal ? y : y + i;
+        shipCells.push({ x: cellX, y: cellY });
+        
+        const cell = document.querySelector(`#placementBoard .cell[data-x='${cellX}'][data-y='${cellY}']`);
+        cell.classList.add('ship');
+        cell.classList.add(`${ship.name.toLowerCase()}`);
+    }
+    
+    placedShips.push({
+        name: ship.name,
+        cells: shipCells
+    });
+}
+
+// Add ship rotation with 'R' key
+document.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'r' && !waitingForOpponent && currentShip < SHIPS.length) {
+        isHorizontal = !isHorizontal;
+        updateStatus(`Rotated ship to ${isHorizontal ? 'horizontal' : 'vertical'} position`);
+        
+        // Frissítjük az előnézetet, ha van aktív előnézet
+        const hoveredCell = document.querySelector('#placementBoard .cell:hover');
+        if (hoveredCell) {
+            const x = parseInt(hoveredCell.dataset.x);
+            const y = parseInt(hoveredCell.dataset.y);
+            showShipPreview(x, y, SHIPS[currentShip].size);
+        }
+    }
+});
+
+// Modify the hovering preview
+placementBoard.addEventListener('mouseover', (event) => {
+    if (waitingForOpponent || currentShip >= SHIPS.length) return;
+    if (!event.target.classList.contains('cell')) return;
     
     const x = parseInt(event.target.dataset.x);
     const y = parseInt(event.target.dataset.y);
+    const ship = SHIPS[currentShip];
     
-    if (event.target.classList.contains('hit') || event.target.classList.contains('miss')) {
+    showShipPreview(x, y, ship.size);
+});
+
+placementBoard.addEventListener('mouseout', () => {
+    clearShipPreview();
+});
+
+function showShipPreview(x, y, size) {
+    clearShipPreview();
+    
+    if (!canPlaceShip(x, y, size, isHorizontal)) {
         return;
     }
-
-    socket.send(JSON.stringify({
-        type: 'shoot',
-        uid: userUID,
-        x,
-        y
-    }));
+    
+    for (let i = 0; i < size; i++) {
+        const previewX = isHorizontal ? x + i : x;
+        const previewY = isHorizontal ? y : y + i;
+        
+        if (previewX < BOARD_SIZE && previewY < BOARD_SIZE) {
+            const cell = document.querySelector(`#placementBoard .cell[data-x='${previewX}'][data-y='${previewY}']`);
+            cell.classList.add('preview');
+        }
+    }
 }
 
+function clearShipPreview() {
+    const cells = document.querySelectorAll('#placementBoard .cell.preview');
+    cells.forEach(cell => cell.classList.remove('preview'));
+}
+
+// Modify submitShips to send the complete ship data
 function submitShips() {
+    // Átalakítjuk a hajókat a szerver által várt formátumra
+    const serverShips = [];
+    placedShips.forEach(ship => {
+        ship.cells.forEach(cell => {
+            serverShips.push({
+                x: cell.x,
+                y: cell.y,
+                name: ship.name
+            });
+        });
+    });
+
     socket.send(JSON.stringify({
         type: 'placeShip',
         uid: userUID,
-        ships: ships
+        ships: serverShips  // Itt küldjük el a szervernek érthető formátumban
     }));
+    
     doneButton.disabled = true;
     disableBoard(placementBoard);
     updateStatus("Waiting for second player...");
@@ -161,6 +281,9 @@ function handleOpponentShot(message) {
     const cell = document.querySelector(`#placementBoard .cell[data-x='${message.x}'][data-y='${message.y}']`);
     if (cell) {
         cell.classList.add(message.hit ? 'hit' : 'miss');
+        if (message.hit && message.shipName) {
+            cell.setAttribute('data-ship', message.shipName);
+        }
     }
 }
 
@@ -168,6 +291,10 @@ function handleShotResult(message) {
     const cell = document.querySelector(`#shootingBoard .cell[data-x='${message.x}'][data-y='${message.y}']`);
     if (cell) {
         cell.classList.add(message.hit ? 'hit' : 'miss');
+        if (message.hit && message.shipName) {
+            cell.setAttribute('data-ship', message.shipName);
+            cell.setAttribute('title', message.shipName); // Hozzáadjuk a tooltip-et
+        }
     }
 
     socket.send(JSON.stringify({
@@ -319,3 +446,27 @@ function navigateTo(url) {
 if (!userUID) {
     logoutUser();
 }
+
+function handleShootClick(event) {
+    if (!gameActive || waitingForOpponent) return;
+    if (event.target.classList.contains('disabled')) return;
+    
+    const x = parseInt(event.target.dataset.x);
+    const y = parseInt(event.target.dataset.y);
+    
+    if (event.target.classList.contains('hit') || event.target.classList.contains('miss')) {
+        return;
+    }
+
+    socket.send(JSON.stringify({
+        type: 'shoot',
+        uid: userUID,
+        x,
+        y
+    }));
+}
+
+// Inicializáljuk az első hajó üzenetét
+window.addEventListener('DOMContentLoaded', (event) => {
+    updateStatus(`Place your ${SHIPS[0].name} (${SHIPS[0].size} cells)`);
+});
