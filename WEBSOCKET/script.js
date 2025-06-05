@@ -8,7 +8,7 @@ const MAX_SHIPS = 10;
 
 const userUID = getCookie("userUID");
 if (!userUID) {
-    redirectToLogin("Hiba: Nem található userUID. Kérjük, jelentkezz be újra!");
+    redirectToLogin("Error: UserUID not found. Please log in again!");
 }
 
 let ships = [];
@@ -21,7 +21,7 @@ let timerInterval = null;
 waitingDiv.id = 'waitingMessage';
 waitingDiv.classList.add('waiting-message');
 document.body.insertBefore(waitingDiv, document.body.firstChild);
-waitingDiv.innerHTML = '<h3>Várakozás a másik játékosra</h3><div class="timer">0 másodperc</div>';
+waitingDiv.innerHTML = '<h3>Waiting for other player</h3><div class="timer">0 seconds</div>';
 startWaitingTimer();
 
 const socket = new WebSocket('ws://localhost:16108');
@@ -74,7 +74,7 @@ function handleCellClick(event) {
 
         if (shipsPlaced === MAX_SHIPS) {
             doneButton.disabled = false;
-            updateStatus("Minden hajó elhelyezve. Kattints a 'Kész' gombra!");
+            updateStatus("All ships placed. Click 'Ready' button!");
         }
     }
 }
@@ -106,7 +106,7 @@ function submitShips() {
     }));
     doneButton.disabled = true;
     disableBoard(placementBoard);
-    updateStatus("Várakozás a második játékosra...");
+    updateStatus("Waiting for second player...");
     waitingForOpponent = true;
 }
 
@@ -134,14 +134,17 @@ function handleSocketMessage(event) {
             
             if (message.yourTurn) {
                 enableBoard(shootingBoard);
-                updateStatus("Te következel!");
+                updateStatus("Your turn!");
             } else {
                 disableBoard(shootingBoard);
-                updateStatus("Az ellenfél következik...");
+                updateStatus("Opponent's turn...");
             }
             break;
         case 'shotResult':
             handleShotResult(message);
+            break;
+        case 'opponentShot':
+            handleOpponentShot(message);
             break;
         case 'end':
             handleGameEnd(message);
@@ -151,6 +154,13 @@ function handleSocketMessage(event) {
             alert(message.message);
             navigateTo("../mainpage/mainpage.html");
             break;
+    }
+}
+
+function handleOpponentShot(message) {
+    const cell = document.querySelector(`#placementBoard .cell[data-x='${message.x}'][data-y='${message.y}']`);
+    if (cell) {
+        cell.classList.add(message.hit ? 'hit' : 'miss');
     }
 }
 
@@ -171,38 +181,38 @@ function handleGameEnd(message) {
     waitingForOpponent = false;
     stopWaitingTimer();
 
-    // Magyar üzenetek beállítása
+    // Set game end messages
     let gameEndMessage = "";
     if (message.message.includes("won")) {
-        gameEndMessage = "Gratulálunk, nyertél!";
+        gameEndMessage = "Congratulations, you won!";
     } else if (message.message.includes("lost")) {
-        gameEndMessage = "Sajnáljuk, vesztettél!";
+        gameEndMessage = "Sorry, you lost!";
     } else {
-        gameEndMessage = message.message; // Egyéb üzenetek esetén
+        gameEndMessage = message.message;
     }
 
-    // Előző tartalom törlése és a játék végeredményének beállítása
+    // Clear previous content and set game results
     waitingDiv.innerHTML = `
-        <h2>Játék vége</h2>
+        <h2>Game Over</h2>
         <p>${gameEndMessage}</p>
     `;
 
-    // A navigációs gomb létrehozása
+    // Create navigation button
     const backButton = document.createElement('button');
-    backButton.textContent = 'Vissza a főoldalra';
+    backButton.textContent = 'Back to Main Page';
     backButton.classList.add('end-game-button');
     backButton.addEventListener('click', () => {
         navigateTo("../MAINPAGE/mainpage.html");
     });
 
-    // A gomb hozzáadása a waitingDiv-hez
+    // Add button to waitingDiv
     waitingDiv.appendChild(backButton);
     waitingDiv.style.display = 'block';
 
-    // A státusz frissítése
-    updateStatus("<h2>Játék vége</h2>");
+    // Update status
+    updateStatus("<h2>Game Over</h2>");
 
-    // A játéktáblák letiltása
+    // Disable boards
     disableBoard(placementBoard);
     disableBoard(shootingBoard);
 }
@@ -256,7 +266,7 @@ function stopWaitingTimer() {
 function updateWaitingTimer() {
     const timerElement = waitingDiv.querySelector('.timer');
     if (timerElement) {
-        timerElement.textContent = `${waitingTimer} másodperc`;
+        timerElement.textContent = `${waitingTimer} seconds`;
     }
 }
 
@@ -281,12 +291,12 @@ function logoutUser() {
     .then(data => {
         if (data.status === "success") {
             clearCookies();
-            alert("Sikeres kijelentkezés!");
+            alert("Successfully logged out!");
             navigateTo("../LOGIN/login.html");
         }
     })
     .catch(error => {
-        console.error("Hiba történt a kijelentkezés során: ", error);
+        console.error("Error during logout: ", error);
     });
 }
 

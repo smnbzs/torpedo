@@ -256,27 +256,28 @@ function handleShoot(ws, uid, x, y) {
     }
 
     const opponentUid = game.players.find(pUid => pUid !== uid);
-    if (!opponentUid || !players[opponentUid]) {
-        console.error(`Opponent data missing for shooting player ${uid} in game ${gameId}`);
-        // Itt lehet, hogy le kellene zárni a játékot, mert súlyos hiba van
-        // endGameWithError(gameId, "Opponent data missing.");
-        return;
-    }
-
-    // Ellenőrizd a találatot az ellenfél hajóin
     const hit = players[opponentUid].ships.some(ship => ship.x === x && ship.y === y);
-    console.log(`Player ${uid} shoots at [${x},${y}] in game ${gameId}. Hit: ${hit}`);
-
-    // Rögzítsd a lövést a lövő játékosnál
+    
+    // Log the shot
     players[uid].shots.push({ x, y, hit });
 
-    // Küldd el a lövés eredményét a lövő játékosnak
+    // Send result to shooter
     ws.send(JSON.stringify({
         type: 'shotResult',
         x: x,
         y: y,
         hit: hit,
     }));
+
+    // Send shot info to opponent
+    if (players[opponentUid] && players[opponentUid].conn.readyState === WebSocket.OPEN) {
+        players[opponentUid].conn.send(JSON.stringify({
+            type: 'opponentShot',
+            x: x,
+            y: y,
+            hit: hit
+        }));
+    }
 
     // Ellenőrizd a győzelmet
     const gameEnded = checkWin(gameId, uid, opponentUid); // uid a lövő (shooter)
